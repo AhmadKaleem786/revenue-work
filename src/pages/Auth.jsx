@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Alert, Button, Card, Form, Input, Typography, message } from "antd";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Formik } from "formik";
@@ -65,9 +65,11 @@ export default function Auth({ mode }) {
     dispatch = useDispatch(),
     nav = useNavigate(),
     user = useSelector((s) => s.auth);
+  const [submitError, setSubmitError] = useState("");
   if (user) return <Navigate to="/dashboard" />;
   const submit = async (v, { setSubmitting }) => {
     try {
+      setSubmitError("");
       const existing = JSON.parse(localStorage.getItem("rw-user") || "null");
       const profile = firebaseEnabled
         ? await (signup ? signUp(v) : signIn(v.email, v.password))
@@ -85,7 +87,9 @@ export default function Auth({ mode }) {
       message.success(signup ? "Account created. Welcome!" : "Welcome back!");
       nav("/dashboard");
     } catch (error) {
-      message.error(errorText(error));
+      const text = errorText(error, "Unable to sign in. Please try again.");
+      setSubmitError(text);
+      message.error(text);
     } finally {
       setSubmitting(false);
     }
@@ -120,6 +124,15 @@ export default function Auth({ mode }) {
               showIcon
               message="Demo mode"
               description="Data is stored in this browser until Firebase is configured."
+            />
+          )}
+          {submitError && (
+            <Alert
+              type="error"
+              showIcon
+              message={submitError}
+              closable
+              onClose={() => setSubmitError("")}
             />
           )}
           <Formik

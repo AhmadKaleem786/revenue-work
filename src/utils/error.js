@@ -4,6 +4,10 @@ export const errorText = (
 ) => {
   const raw =
     error?.payload ||
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.data?.message ||
+    error?.data?.error ||
     error?.code ||
     error?.message ||
     (typeof error === "string" ? error : "");
