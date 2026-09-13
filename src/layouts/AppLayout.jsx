@@ -240,10 +240,10 @@ export default function AppLayout() {
 
       <Drawer
         className="mobile-drawer"
-        placement="bottom"
+        placement="left"
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
-        height="78vh"
+        width={300}
         closeIcon={false}
         bodyStyle={{ padding: 0, background: "var(--panel)" }}
       >

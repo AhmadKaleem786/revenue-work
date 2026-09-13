@@ -283,8 +283,9 @@ a {
 }
 
 .mobile-drawer .ant-drawer-content {
-  border-top-left-radius: 24px;
+  background: var(--panel);
   border-top-right-radius: 24px;
+  border-bottom-right-radius: 24px;
 }
 
 .mobile-drawer__header {
@@ -293,6 +294,14 @@ a {
   justify-content: space-between;
   padding: 8px 12px 4px;
   border-bottom: 1px solid var(--border);
+}
+
+.mobile-drawer .brand {
+  color: var(--text);
+}
+
+.mobile-drawer .brand__copy span {
+  color: var(--muted);
 }
 
 .topbar {
@@ -853,7 +862,8 @@ body[data-theme="dark"][data-accent="sunset"] {
   }
 
   .topbar {
-    padding: 0 16px;
+    height: 64px;
+    padding: 0 12px;
   }
 
   .global-search {
@@ -883,6 +893,31 @@ body[data-theme="dark"][data-accent="sunset"] {
   .mobile-drawer__header {
     background: var(--panel-strong);
     border-color: rgba(148, 163, 184, 0.16);
+  }
+
+  .top-actions {
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .theme-toggle {
+    gap: 6px;
+    padding: 5px 8px;
+  }
+
+  .profile-trigger {
+    padding: 4px;
+    border-radius: 50%;
+  }
+
+  .profile-trigger__meta {
+    display: none;
+  }
+
+  .profile-trigger .ant-avatar {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
   }
 
   .page-header {
@@ -950,6 +985,14 @@ body[data-theme="dark"][data-accent="sunset"] {
   .auth-form .ant-typography h2,
   .auth-form h2.ant-typography {
     font-size: 28px;
+  }
+
+  .mobile-drawer .ant-drawer-content {
+    border-radius: 0 22px 22px 0;
+  }
+
+  .mobile-drawer .brand--mobile {
+    padding: 16px;
   }
 }
 
