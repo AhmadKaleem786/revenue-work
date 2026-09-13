@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function owned(data) {
+      return signedIn() && data.createdBy == request.auth.uid;
+    }
+
+    match /{collection}/{document} {
+      allow create: if owned(request.resource.data);
+      allow update: if owned(resource.data) && owned(request.resource.data);
+      allow delete: if owned(resource.data);
+      allow get, list: if owned(resource.data);
+    }
+  }
+}

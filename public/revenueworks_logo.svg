@@ -1,0 +1,12 @@
+<svg width="680" height="220" viewBox="0 0 680 220" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RevenueWorks</title><desc id="desc">Revenue, profit and growth analytics</desc>
+  <g transform="translate(70 40)">
+    <rect y="86" width="26" height="54" rx="4" fill="#5DCAA5"/>
+    <rect x="34" y="60" width="26" height="80" rx="4" fill="#1D9E75"/>
+    <rect x="68" y="30" width="26" height="110" rx="4" fill="#0F6E56"/>
+    <path d="M4 66L48 34L98 8" stroke="#0F6E56" stroke-width="4" stroke-linecap="round"/>
+    <path d="M91 2L100 8L92 16" stroke="#0F6E56" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="215" y="128" font-family="Arial, sans-serif" font-size="56" font-weight="600" fill="#102A25">Revenue<tspan fill="#0F6E56">Works</tspan></text>
+  <text x="217" y="160" font-family="Arial, sans-serif" font-size="14" letter-spacing="1.5" fill="#52615D">REVENUE · PROFIT · GROWTH ANALYTICS</text>
+</svg>
