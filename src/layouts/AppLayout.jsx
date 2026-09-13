@@ -215,7 +215,7 @@ export default function AppLayout() {
               overlayClassName="profile-dropdown"
             >
               <button className="profile-trigger" type="button">
-                <Avatar src={user?.logo} style={{ background: "var(--primary)" }}>
+                <Avatar src={user?.logo} >
                   {user?.name?.[0] || "A"}
                 </Avatar>
                 <span className="profile-trigger__meta">
