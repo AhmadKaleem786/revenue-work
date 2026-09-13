@@ -13,9 +13,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { deleteRecordThunk, saveRecordThunk } from "../store";
 import { DeleteConfirm, EmptyState, PageHeader, money } from "../components/UI";
 import { errorText } from "../utils/error";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
+import { downloadExcel } from "../utils/excel";
 const key = () => crypto.randomUUID();
 export default function Projects() {
   const data = useSelector((s) => s.projects),
@@ -54,6 +55,23 @@ export default function Projects() {
         : { createdDate: dayjs() },
     );
   };
+  const exportProjects = () =>
+    downloadExcel({
+      fileName: "revenueworks-projects",
+      sheets: [
+        {
+          name: "Projects",
+          rows: rows.map((project) => ({
+            Project: project.name,
+            Description: project.description || "",
+            "Created Date": project.createdDate || "",
+            Revenue: project.r,
+            Deductions: project.d,
+            "Net Revenue": project.n,
+          })),
+        },
+      ],
+    });
   const save = async () => {
     let v;
     try {
@@ -90,15 +108,7 @@ export default function Projects() {
       <PageHeader
         title="Projects"
         subtitle="Track financial performance from kickoff to completion."
-        action={
-          <Button
-            type="primary"
-            icon={<Plus size={16} />}
-            onClick={() => open()}
-          >
-            New project
-          </Button>
-        }
+        action={<><Button icon={<Download size={16} />} onClick={exportProjects}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>New project</Button></>}
       />
       <Input
         className="table-search"

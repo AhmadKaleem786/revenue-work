@@ -13,7 +13,7 @@ import {
   Tag,
   message,
 } from "antd";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteRecordThunk, saveRecordThunk } from "../store";
@@ -26,6 +26,7 @@ import {
 } from "../components/UI";
 import { errorText } from "../utils/error";
 import dayjs from "dayjs";
+import { downloadExcel } from "../utils/excel";
 const id = () => crypto.randomUUID();
 export default function ProjectDetails() {
   const { id: projectId } = useParams(),
@@ -66,6 +67,36 @@ export default function ProjectDetails() {
       x ? { ...x, date: dayjs(x.date) } : { type: "Revenue", date: dayjs() },
     );
   };
+  const exportProject = () =>
+    downloadExcel({
+      fileName: `revenueworks-${project.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
+      sheets: [
+        {
+          name: "Summary",
+          rows: [
+            {
+              Project: project.name,
+              Description: project.description || "",
+              "Created Date": project.createdDate || "",
+              "Total Revenue": rev,
+              "Total Deductions": ded,
+              "Net Revenue": rev - ded,
+            },
+          ],
+        },
+        {
+          name: "Transactions",
+          rows: rows.map((transaction) => ({
+            Date: transaction.date || "",
+            Description: transaction.description || "",
+            Type: transaction.type || "",
+            "Cost Center": centers.find((center) => center.id === transaction.costCenterId)?.name || "",
+            Amount: Number(transaction.amount) || 0,
+            Notes: transaction.notes || "",
+          })),
+        },
+      ],
+    });
   const save = async () => {
     let v;
     try {
@@ -109,15 +140,7 @@ export default function ProjectDetails() {
       <PageHeader
         title={project.name}
         subtitle={project.description || `Created ${project.createdDate}`}
-        action={
-          <Button
-            type="primary"
-            icon={<Plus size={16} />}
-            onClick={() => open()}
-          >
-            Add transaction
-          </Button>
-        }
+        action={<><Button icon={<Download size={16} />} onClick={exportProject}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>Add transaction</Button></>}
       />
       <div className="stats-row">
         <StatCard

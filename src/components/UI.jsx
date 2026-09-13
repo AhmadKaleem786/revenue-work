@@ -20,7 +20,7 @@ export const PageHeader = ({ title, subtitle, action }) => (
         <Typography.Text type="secondary">{subtitle}</Typography.Text>
       )}
     </div>
-    {action}
+    {action && <div className="page-header__action">{action}</div>}
   </div>
 );
 

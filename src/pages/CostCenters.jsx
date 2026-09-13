@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { deleteRecordThunk, saveRecordThunk } from "../store";
 import { DeleteConfirm, EmptyState, PageHeader } from "../components/UI";
 import { errorText } from "../utils/error";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { downloadExcel } from "../utils/excel";
 const key = () => crypto.randomUUID();
 export default function CostCenters() {
   const data = useSelector((s) => s.costCenters) || [];
@@ -32,6 +33,34 @@ export default function CostCenters() {
       form.setFieldsValue(x || { name: "", description: "" });
     }, 0);
   };
+  const exportCostCenters = () =>
+    downloadExcel({
+      fileName: "revenueworks-cost-centers",
+      sheets: [
+        {
+          name: "Cost Centers",
+          rows: filtered.map((center) => {
+            const transactions = expenses.filter(
+              (expense) => expense.costCenterId === center.id,
+            );
+            const revenue = transactions
+              .filter((expense) => expense.type === "Revenue")
+              .reduce((sum, expense) => sum + Number(expense.amount), 0);
+            const deductions = transactions
+              .filter((expense) => expense.type === "Deduction")
+              .reduce((sum, expense) => sum + Number(expense.amount), 0);
+            return {
+              "Cost Center": center.name,
+              Description: center.description || "",
+              Transactions: transactions.length,
+              Revenue: revenue,
+              Deductions: deductions,
+              "Net Revenue": revenue - deductions,
+            };
+          }),
+        },
+      ],
+    });
   const save = async () => {
     let v;
     try {
@@ -76,15 +105,7 @@ export default function CostCenters() {
       <PageHeader
         title="Cost centers"
         subtitle="Organize income and deductions by business unit."
-        action={
-          <Button
-            type="primary"
-            icon={<Plus size={16} />}
-            onClick={() => open()}
-          >
-            New cost center
-          </Button>
-        }
+        action={<><Button icon={<Download size={16} />} onClick={exportCostCenters}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>New cost center</Button></>}
       />
       <Input
         className="table-search"
