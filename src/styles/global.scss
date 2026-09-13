@@ -771,6 +771,10 @@ body[data-theme="dark"][data-accent="sunset"] {
   width: auto;
 }
 
+.auth-form .ant-alert {
+  margin-bottom: 16px;
+}
+
 .empty-state {
   padding: 30px 16px;
 }
@@ -908,12 +912,44 @@ body[data-theme="dark"][data-accent="sunset"] {
     grid-template-columns: 1fr;
   }
 
-  .auth-form {
-    padding: 20px 14px;
+  .auth {
+    min-height: 100dvh;
+    grid-template-columns: 1fr;
   }
 
   .auth-copy {
-    padding: 30px;
+    min-height: 116px;
+    padding: 20px;
+    justify-content: center;
+  }
+
+  .auth-copy .brand {
+    width: 208px;
+    background-size: 188px auto;
+  }
+
+  .auth-copy > div:last-child {
+    display: none;
+  }
+
+  .auth-form {
+    display: block;
+    padding: 20px 14px 28px;
+  }
+
+  .auth-form .ant-card {
+    width: 100%;
+    padding: 2px 0;
+    border-radius: 18px;
+  }
+
+  .auth-form .ant-card-body {
+    padding: 20px;
+  }
+
+  .auth-form .ant-typography h2,
+  .auth-form h2.ant-typography {
+    font-size: 28px;
   }
 }
 
