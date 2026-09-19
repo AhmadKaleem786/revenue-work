@@ -7,6 +7,7 @@ import {
 import { firebaseEnabled } from "../services/firebase/config";
 import { deleteRecord, deleteRecords, saveRecord } from "../services/api";
 import { errorText } from "../utils/error";
+import { normalizeTransactions } from "../utils/finance";
 
 const saved = firebaseEnabled
   ? {}
@@ -70,9 +71,13 @@ const applyRecordThunks = (builder, collection) => {
 const createDataSlice = (name) =>
   createSlice({
     name,
-    initialState: saved[name] || [],
+    initialState:
+      name === "expenses"
+        ? normalizeTransactions(saved[name] || [])
+        : saved[name] || [],
     reducers: {
-      set: (_, a) => a.payload,
+      set: (_, a) =>
+        name === "expenses" ? normalizeTransactions(a.payload) : a.payload,
       add: (s, a) => {
         s.unshift(a.payload);
       },
@@ -87,6 +92,7 @@ const createDataSlice = (name) =>
 
 export const projectsSlice = createDataSlice("projects"),
   costCentersSlice = createDataSlice("costCenters"),
+  projectStatusesSlice = createDataSlice("projectStatuses"),
   expensesSlice = createDataSlice("expenses");
 
 const authSlice = createSlice({
@@ -124,6 +130,7 @@ export const store = configureStore({
     auth: authSlice.reducer,
     projects: projectsSlice.reducer,
     costCenters: costCentersSlice.reducer,
+    projectStatuses: projectStatusesSlice.reducer,
     expenses: expensesSlice.reducer,
     ui: uiSlice.reducer,
   },
@@ -137,6 +144,7 @@ store.subscribe(() => {
       JSON.stringify({
         projects: s.projects,
         costCenters: s.costCenters,
+        projectStatuses: s.projectStatuses,
         expenses: s.expenses,
       }),
     );

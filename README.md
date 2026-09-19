@@ -1,6 +1,6 @@
 # RevenueWorks
 
-A responsive financial workspace for projects, cost centers, revenue, and deductions.
+A responsive financial workspace for projects, cost centers, revenue, expenses, and net income.
 
 ## Run locally
 

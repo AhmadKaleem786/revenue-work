@@ -18,6 +18,9 @@ import {
   XAxis,
   YAxis,
   Legend,
+  Pie,
+  PieChart,
+  Cell,
 } from "recharts";
 import { downloadExcel } from "../utils/excel";
 
@@ -25,27 +28,38 @@ export default function Dashboard() {
   const projects = useSelector((s) => s.projects);
   const expenses = useSelector((s) => s.expenses);
   const centers = useSelector((s) => s.costCenters);
+  const statuses = useSelector((s) => s.projectStatuses) || [];
   const rev = expenses
     .filter((x) => x.type === "Revenue")
     .reduce((sum, x) => sum + Number(x.amount), 0);
-  const ded = expenses
-    .filter((x) => x.type === "Deduction")
+  const expenseTotal = expenses
+    .filter((x) => x.type === "Expense")
     .reduce((sum, x) => sum + Number(x.amount), 0);
   const rows = projects.map((project) => {
     const entries = expenses.filter((entry) => entry.projectId === project.id);
     const revenue = entries
       .filter((entry) => entry.type === "Revenue")
       .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    const deductions = entries
-      .filter((entry) => entry.type === "Deduction")
+    const expenseTotal = entries
+      .filter((entry) => entry.type === "Expense")
       .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    return { ...project, revenue, deductions, net: revenue - deductions };
+    return { ...project, revenue, expenseTotal, netIncome: revenue - expenseTotal };
   });
   const chart = rows.map((project) => ({
     name: project.name,
     revenue: project.revenue,
-    deductions: project.deductions,
+    expenses: project.expenseTotal,
   }));
+  const statusChart = [
+    ...statuses.map((status) => ({
+      name: status.name,
+      value: projects.filter((project) => project.projectStatusId === status.id).length,
+    })),
+    ...(projects.some((project) => !project.projectStatusId)
+      ? [{ name: "Not set", value: projects.filter((project) => !project.projectStatusId).length }]
+      : []),
+  ].filter((item) => item.value > 0);
+  const statusColors = ["#1677ff", "#0f6e56", "#7c3aed", "#ea580c", "#d4380d", "#08979c"];
 
   const exportDashboard = () =>
     downloadExcel({
@@ -57,8 +71,8 @@ export default function Dashboard() {
             {
               "Total Projects": projects.length,
               "Total Revenue": rev,
-              "Total Deductions": ded,
-              "Net Revenue": rev - ded,
+              "Total Expenses": expenseTotal,
+              "Net Income": rev - expenseTotal,
             },
           ],
         },
@@ -68,9 +82,10 @@ export default function Dashboard() {
             Project: project.name,
             Description: project.description || "",
             Created: project.createdDate || "",
+            Status: statuses.find((status) => status.id === project.projectStatusId)?.name || "",
             Revenue: project.revenue,
-            Deductions: project.deductions,
-            "Net Revenue": project.net,
+            Expenses: project.expenseTotal,
+            "Net Income": project.netIncome,
           })),
         },
         {
@@ -117,15 +132,15 @@ export default function Dashboard() {
           <StatCard title="Total revenue" value={money(rev)} icon={<Banknote />} color="green" />
         </Col>
         <Col xs={24} sm={12} xl={6}>
-          <StatCard title="Total deductions" value={money(ded)} icon={<TrendingDown />} color="orange" />
+          <StatCard title="Total expenses" value={money(expenseTotal)} icon={<TrendingDown />} color="orange" />
         </Col>
         <Col xs={24} sm={12} xl={6}>
-          <StatCard title="Net revenue" value={money(rev - ded)} icon={<Wallet />} color="purple" />
+          <StatCard title="Net Income" value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
         </Col>
       </Row>
       <Row gutter={[20, 20]} className="section">
-        <Col xs={24} xl={14}>
-          <Card title="Revenue vs. deductions" className="chart-card">
+        <Col xs={24} xl={12}>
+          <Card title="Revenue vs. Expenses" className="chart-card">
             {chart.length ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={chart}>
@@ -134,7 +149,7 @@ export default function Dashboard() {
                   <Tooltip formatter={(value) => money(value)} />
                   <Legend />
                   <Bar dataKey="revenue" fill="#1677ff" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="deductions" fill="#ff9c6e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" name="Expenses" fill="#ff9c6e" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -142,7 +157,24 @@ export default function Dashboard() {
             )}
           </Card>
         </Col>
-        <Col xs={24} xl={10}>
+        <Col xs={24} xl={12}>
+          <Card title="Projects by status" className="chart-card">
+            {statusChart.length ? (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={statusChart} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                    {statusChart.map((item, index) => <Cell key={item.name} fill={statusColors[index % statusColors.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(value) => [value, "Projects"]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyState title="No project statuses yet" description="Assign a status to projects to see this breakdown." />
+            )}
+          </Card>
+        </Col>
+        <Col xs={24}>
           <Card title="Projects">
             <Table
               size="small"
@@ -159,8 +191,8 @@ export default function Dashboard() {
                   render: (value, record) => <Link to={`/projects/${record.id}`}>{value}</Link>,
                 },
                 {
-                  title: "Net revenue",
-                  dataIndex: "net",
+                  title: "Net Income",
+                  dataIndex: "netIncome",
                   render: (value) => <Tag color={value >= 0 ? "green" : "red"}>{money(value)}</Tag>,
                 },
               ]}

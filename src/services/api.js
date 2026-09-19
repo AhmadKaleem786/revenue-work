@@ -4,13 +4,14 @@ import { removeDocument, saveDocument } from "./firebase/data";
 export const COLLECTIONS = {
   projects: "projects",
   costCenters: "costCenters",
+  projectStatuses: "projectStatuses",
   expenses: "expenses",
 };
 
 const stamp = () => new Date().toISOString();
 
 export const prepareRecord = (item, userId) => {
-  const { r, d, n, revenue, deductions, net, key, ...rest } = item;
+  const { r, d, n, revenue, deductions, expenseTotal, net, netIncome, key, ...rest } = item;
   return {
     ...Object.fromEntries(
       Object.entries(rest).filter(([, value]) => value !== undefined),

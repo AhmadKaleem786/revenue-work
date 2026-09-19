@@ -1,7 +1,7 @@
 import { collection, deleteDoc, doc, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { auth, db } from './config';
 
-const COMPUTED_KEYS = new Set(['r', 'd', 'n', 'revenue', 'deductions', 'net', 'key']);
+const COMPUTED_KEYS = new Set(['r', 'd', 'n', 'revenue', 'deductions', 'expenseTotal', 'net', 'netIncome', 'key']);
 
 const serialize = (value) => (value?.toDate ? value.toDate().toISOString() : value);
 

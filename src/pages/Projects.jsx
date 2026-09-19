@@ -5,6 +5,8 @@ import {
   Form,
   Input,
   Modal,
+  Select,
+  Space,
   Table,
   Tag,
   message,
@@ -21,9 +23,11 @@ const key = () => crypto.randomUUID();
 export default function Projects() {
   const data = useSelector((s) => s.projects),
     expenses = useSelector((s) => s.expenses),
+    statuses = useSelector((s) => s.projectStatuses) || [],
     user = useSelector((s) => s.auth),
     dispatch = useDispatch(),
     [query, setQuery] = useState(""),
+    [status, setStatus] = useState(),
     [editing, setEditing] = useState(null),
     [del, setDel] = useState(null),
     [saving, setSaving] = useState(false),
@@ -31,20 +35,24 @@ export default function Projects() {
   const rows = useMemo(
     () =>
       data
-        .filter((x) =>
-          (x.name + x.description).toLowerCase().includes(query.toLowerCase()),
+        .filter(
+          (x) =>
+            (x.name + x.description)
+              .toLowerCase()
+              .includes(query.toLowerCase()) &&
+            (!status || x.projectStatusId === status),
         )
         .map((p) => {
           const e = expenses.filter((x) => x.projectId === p.id),
             r = e
               .filter((x) => x.type === "Revenue")
               .reduce((a, x) => a + Number(x.amount), 0),
-            d = e
-              .filter((x) => x.type === "Deduction")
+            expenseTotal = e
+              .filter((x) => x.type === "Expense")
               .reduce((a, x) => a + Number(x.amount), 0);
-          return { ...p, r, d, n: r - d };
+          return { ...p, r, expenseTotal, netIncome: r - expenseTotal };
         }),
-    [data, expenses, query],
+    [data, expenses, query, status],
   );
   const open = (x) => {
     setEditing(x || {});
@@ -65,9 +73,12 @@ export default function Projects() {
             Project: project.name,
             Description: project.description || "",
             "Created Date": project.createdDate || "",
+            Status:
+              statuses.find((item) => item.id === project.projectStatusId)
+                ?.name || "",
             Revenue: project.r,
-            Deductions: project.d,
-            "Net Revenue": project.n,
+            Expenses: project.expenseTotal,
+            "Net Income": project.netIncome,
           })),
         },
       ],
@@ -85,6 +96,7 @@ export default function Projects() {
       const item = {
         name: v.name,
         description: v.description || "",
+        projectStatusId: v.projectStatusId,
         createdDate: v.createdDate.format("YYYY-MM-DD"),
         id: editing.id || key(),
         createdAt: editing.createdAt || now,
@@ -108,14 +120,40 @@ export default function Projects() {
       <PageHeader
         title="Projects"
         subtitle="Track financial performance from kickoff to completion."
-        action={<><Button icon={<Download size={16} />} onClick={exportProjects}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>New project</Button></>}
+        action={
+          <>
+            <Button icon={<Download size={16} />} onClick={exportProjects}>
+              Export Excel
+            </Button>
+            <Button
+              type="primary"
+              icon={<Plus size={16} />}
+              onClick={() => open()}
+            >
+              New project
+            </Button>
+          </>
+        }
       />
-      <Input
-        className="table-search"
-        prefix={<Search size={16} />}
-        placeholder="Search projects"
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <Space className="table-search project-filters">
+        <Input
+          style={{ maxWidth: 300 }}
+          prefix={<Search size={16} />}
+          placeholder="Search projects"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <Select
+          allowClear
+          placeholder="All statuses"
+          style={{ width: 180, flex: "0 0 180px" }}
+          value={status}
+          onChange={setStatus}
+          options={statuses.map((item) => ({
+            value: item.id,
+            label: item.name,
+          }))}
+        />
+      </Space>
       <Table
         className="data-table"
         rowKey="id"
@@ -147,14 +185,20 @@ export default function Projects() {
             responsive: ["md"],
           },
           {
-            title: "Deductions",
-            dataIndex: "d",
+            title: "Status",
+            dataIndex: "projectStatusId",
+            render: (value) =>
+              statuses.find((item) => item.id === value)?.name || "—",
+          },
+          {
+            title: "Expenses",
+            dataIndex: "expenseTotal",
             render: money,
             responsive: ["lg"],
           },
           {
-            title: "Net revenue",
-            dataIndex: "n",
+            title: "Net Income",
+            dataIndex: "netIncome",
             render: (v) => (
               <Tag color={v >= 0 ? "green" : "red"}>{money(v)}</Tag>
             ),
@@ -210,6 +254,22 @@ export default function Projects() {
             <Input.TextArea
               rows={3}
               placeholder="Optional project description"
+            />
+          </Form.Item>
+          <Form.Item
+            label="Project status"
+            name="projectStatusId"
+            rules={[
+              { required: true, message: "Please select a project status" },
+            ]}
+          >
+            <Select
+              placeholder="Select a project status"
+              options={statuses.map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))}
+              notFoundContent="Create a project status first"
             />
           </Form.Item>
           <Form.Item

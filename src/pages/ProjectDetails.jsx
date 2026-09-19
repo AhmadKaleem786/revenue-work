@@ -32,26 +32,28 @@ export default function ProjectDetails() {
   const { id: projectId } = useParams(),
     project = useSelector((s) => s.projects.find((x) => x.id === projectId)),
     centers = useSelector((s) => s.costCenters),
+    statuses = useSelector((s) => s.projectStatuses) || [],
     all = useSelector((s) => s.expenses),
     user = useSelector((s) => s.auth),
     dispatch = useDispatch(),
     [editing, setEditing] = useState(null),
     [del, setDel] = useState(null),
     [type, setType] = useState(""),
+    [costCenterId, setCostCenterId] = useState(),
     [saving, setSaving] = useState(false),
     [form] = Form.useForm();
   const rows = useMemo(
       () =>
         all.filter(
-          (x) => x.projectId === projectId && (!type || x.type === type),
+          (x) => x.projectId === projectId && (!type || x.type === type) && (!costCenterId || x.costCenterId === costCenterId),
         ),
-      [all, projectId, type],
+      [all, projectId, type, costCenterId],
     ),
     rev = rows
       .filter((x) => x.type === "Revenue")
       .reduce((a, x) => a + Number(x.amount), 0),
-    ded = rows
-      .filter((x) => x.type === "Deduction")
+    expenseTotal = rows
+      .filter((x) => x.type === "Expense")
       .reduce((a, x) => a + Number(x.amount), 0);
   if (!project)
     return (
@@ -78,9 +80,10 @@ export default function ProjectDetails() {
               Project: project.name,
               Description: project.description || "",
               "Created Date": project.createdDate || "",
+              Status: statuses.find((status) => status.id === project.projectStatusId)?.name || "",
               "Total Revenue": rev,
-              "Total Deductions": ded,
-              "Net Revenue": rev - ded,
+              "Total Expenses": expenseTotal,
+              "Net Income": rev - expenseTotal,
             },
           ],
         },
@@ -139,7 +142,7 @@ export default function ProjectDetails() {
       </Link>
       <PageHeader
         title={project.name}
-        subtitle={project.description || `Created ${project.createdDate}`}
+        subtitle={`${project.description || `Created ${project.createdDate}`} · Status: ${statuses.find((status) => status.id === project.projectStatusId)?.name || "Not set"}`}
         action={<><Button icon={<Download size={16} />} onClick={exportProject}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>Add transaction</Button></>}
       />
       <div className="stats-row">
@@ -150,14 +153,14 @@ export default function ProjectDetails() {
           color="green"
         />
         <StatCard
-          title="Total deductions"
-          value={money(ded)}
+          title="Total expenses"
+          value={money(expenseTotal)}
           icon={<Trash2 />}
           color="orange"
         />
         <StatCard
-          title="Net revenue"
-          value={money(rev - ded)}
+          title="Net Income"
+          value={money(rev - expenseTotal)}
           icon={<Plus />}
           color="purple"
         />
@@ -166,13 +169,10 @@ export default function ProjectDetails() {
         className="section"
         title="Transactions"
         extra={
-          <Select
-            placeholder="All types"
-            allowClear
-            style={{ width: 140 }}
-            onChange={setType}
-            options={[{ value: "Revenue" }, { value: "Deduction" }]}
-          />
+          <Space wrap>
+            <Select placeholder="All types" allowClear style={{ width: 140 }} onChange={setType} options={[{ value: "Revenue" }, { value: "Expense" }]} />
+            <Select placeholder="All cost centers" allowClear style={{ width: 180 }} onChange={setCostCenterId} options={centers.map((center) => ({ value: center.id, label: center.name }))} />
+          </Space>
         }
       >
         <Table
@@ -183,7 +183,7 @@ export default function ProjectDetails() {
             emptyText: (
               <EmptyState
                 title="No transactions yet"
-                description="Record income or deductions for this project."
+                description="Record revenue or expenses for this project."
                 action={{ label: "Add transaction", onClick: () => open() }}
               />
             ),
@@ -200,7 +200,11 @@ export default function ProjectDetails() {
             {
               title: "Cost center",
               dataIndex: "costCenterId",
-              render: (v) => centers.find((x) => x.id === v)?.name || "—",
+              render: (value) => (
+                <Tag className="cost-center-pill">
+                  {centers.find((center) => center.id === value)?.name || "—"}
+                </Tag>
+              ),
             },
             { title: "Amount", dataIndex: "amount", render: money },
             { title: "Date", dataIndex: "date", responsive: ["md"] },
@@ -270,7 +274,7 @@ export default function ProjectDetails() {
             <Select
               options={[
                 { value: "Revenue", label: "Revenue" },
-                { value: "Deduction", label: "Deduction" },
+                { value: "Expense", label: "Expense" },
               ]}
             />
           </Form.Item>

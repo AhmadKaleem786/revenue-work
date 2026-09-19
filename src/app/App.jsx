@@ -13,6 +13,7 @@ import {
   login,
   logout,
   projectsSlice,
+  projectStatusesSlice,
   resetWorkspace,
   setDataReady,
 } from "../store";
@@ -22,6 +23,7 @@ const Auth = lazy(() => import("../pages/Auth")),
   Projects = lazy(() => import("../pages/Projects")),
   ProjectDetails = lazy(() => import("../pages/ProjectDetails")),
   CostCenters = lazy(() => import("../pages/CostCenters")),
+  ProjectStatuses = lazy(() => import("../pages/ProjectStatuses")),
   Profile = lazy(() => import("../pages/Profile"));
 
 const accentThemes = {
@@ -87,7 +89,7 @@ export default function App() {
       return undefined;
     }
     dispatch(setDataReady(false));
-    let remaining = 3;
+    let remaining = 4;
     const markReady = () => {
       remaining -= 1;
       if (remaining <= 0) dispatch(setDataReady(true));
@@ -102,6 +104,7 @@ export default function App() {
     const subscriptions = [
       listen("projects", projectsSlice.actions.set),
       listen("costCenters", costCentersSlice.actions.set),
+      listen("projectStatuses", projectStatusesSlice.actions.set),
       listen("expenses", expensesSlice.actions.set),
     ];
     return () => subscriptions.forEach((unsubscribe) => unsubscribe());
@@ -144,6 +147,7 @@ export default function App() {
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetails />} />
             <Route path="/cost-centers" element={<CostCenters />} />
+            <Route path="/project-statuses" element={<ProjectStatuses />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Profile settings />} />
           </Route>

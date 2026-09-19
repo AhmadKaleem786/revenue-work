@@ -103,7 +103,7 @@ export default function Auth({ mode }) {
         <div>
           <h1>Financial clarity for every project.</h1>
           <p>
-            Track revenue, manage deductions, and understand performance at a
+            Track revenue, manage expenses, and understand performance at a
             glance.
           </p>
         </div>

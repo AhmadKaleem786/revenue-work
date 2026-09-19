@@ -16,6 +16,7 @@ import {
 import {
   BarChart3,
   Building2,
+  ListChecks,
   FolderKanban,
   LogOut,
   Menu as MenuIcon,
@@ -126,6 +127,7 @@ export default function AppLayout() {
     ["/dashboard", <BarChart3 size={16} />, "Dashboard"],
     ["/projects", <FolderKanban size={16} />, "Projects"],
     ["/cost-centers", <Building2 size={16} />, "Cost centers"],
+    ["/project-statuses", <ListChecks size={16} />, "Project statuses"],
   ].map(([key, icon, label]) => ({ key, icon, label }));
 
   return (

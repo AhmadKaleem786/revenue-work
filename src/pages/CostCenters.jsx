@@ -46,16 +46,16 @@ export default function CostCenters() {
             const revenue = transactions
               .filter((expense) => expense.type === "Revenue")
               .reduce((sum, expense) => sum + Number(expense.amount), 0);
-            const deductions = transactions
-              .filter((expense) => expense.type === "Deduction")
+            const expenseTotal = transactions
+              .filter((expense) => expense.type === "Expense")
               .reduce((sum, expense) => sum + Number(expense.amount), 0);
             return {
               "Cost Center": center.name,
               Description: center.description || "",
               Transactions: transactions.length,
               Revenue: revenue,
-              Deductions: deductions,
-              "Net Revenue": revenue - deductions,
+              Expenses: expenseTotal,
+              "Net Income": revenue - expenseTotal,
             };
           }),
         },
@@ -104,7 +104,7 @@ export default function CostCenters() {
     <>
       <PageHeader
         title="Cost centers"
-        subtitle="Organize income and deductions by business unit."
+        subtitle="Organize revenue and expenses by business unit."
         action={<><Button icon={<Download size={16} />} onClick={exportCostCenters}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>New cost center</Button></>}
       />
       <Input
