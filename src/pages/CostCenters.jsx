@@ -5,7 +5,7 @@ import { deleteRecordThunk, saveRecordThunk } from "../store";
 import { DeleteConfirm, EmptyState, PageHeader } from "../components/UI";
 import { errorText } from "../utils/error";
 import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { downloadExcel } from "../utils/excel";
+import { downloadExcel, exportFileName } from "../utils/excel";
 const key = () => crypto.randomUUID();
 export default function CostCenters() {
   const data = useSelector((s) => s.costCenters) || [];
@@ -35,7 +35,7 @@ export default function CostCenters() {
   };
   const exportCostCenters = () =>
     downloadExcel({
-      fileName: "revenueworks-cost-centers",
+      fileName: exportFileName(user?.name, "cost-centers"),
       sheets: [
         {
           name: "Cost Centers",

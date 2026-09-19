@@ -34,3 +34,12 @@ export const downloadExcel = ({ fileName, sheets }) => {
   });
   XLSX.writeFile(workbook, `${fileName}.xlsx`);
 };
+
+export const exportFileName = (businessName, suffix) => {
+  const slug = String(businessName || "RevenueWorks")
+    .trim()
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+  return `${slug || "revenueworks"}-${suffix}`;
+};

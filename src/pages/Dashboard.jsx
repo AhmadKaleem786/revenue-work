@@ -23,7 +23,7 @@ import {
   PieChart,
   Cell,
 } from "recharts";
-import { downloadExcel } from "../utils/excel";
+import { downloadExcel, exportFileName } from "../utils/excel";
 import { ownedAmount, ownershipShare } from "../utils/ownership";
 
 export default function Dashboard() {
@@ -31,6 +31,7 @@ export default function Dashboard() {
   const expenses = useSelector((s) => s.expenses);
   const centers = useSelector((s) => s.costCenters);
   const statuses = useSelector((s) => s.projectStatuses) || [];
+  const user = useSelector((s) => s.auth);
   const rows = projects.map((project) => {
     const entries = expenses.filter((entry) => entry.projectId === project.id);
     const revenue = entries
@@ -73,7 +74,7 @@ export default function Dashboard() {
 
   const exportDashboard = () =>
     downloadExcel({
-      fileName: "revenueworks-dashboard",
+      fileName: exportFileName(user?.name, "dashboard"),
       sheets: [
         {
           name: "Summary",

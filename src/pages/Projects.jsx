@@ -19,7 +19,7 @@ import { errorText } from "../utils/error";
 import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
-import { downloadExcel } from "../utils/excel";
+import { downloadExcel, exportFileName } from "../utils/excel";
 import { ownershipShare } from "../utils/ownership";
 const key = () => crypto.randomUUID();
 export default function Projects() {
@@ -70,7 +70,7 @@ export default function Projects() {
   };
   const exportProjects = () =>
     downloadExcel({
-      fileName: "revenueworks-projects",
+      fileName: exportFileName(user?.name, "projects"),
       sheets: [
         {
           name: "Projects",

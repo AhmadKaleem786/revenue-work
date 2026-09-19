@@ -5,7 +5,7 @@ import { deleteRecordThunk, saveRecordThunk } from "../store";
 import { DeleteConfirm, EmptyState, PageHeader } from "../components/UI";
 import { errorText } from "../utils/error";
 import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { downloadExcel } from "../utils/excel";
+import { downloadExcel, exportFileName } from "../utils/excel";
 
 const key = () => crypto.randomUUID();
 
@@ -54,7 +54,7 @@ export default function ProjectStatuses() {
   };
   return <>
     <PageHeader title="Project statuses" subtitle="Define the stages used to track your projects."
-      action={<><Button icon={<Download size={16} />} onClick={() => downloadExcel({ fileName: "revenueworks-project-statuses", sheets: [{ name: "Project Statuses", rows: filtered.map((item) => ({ Status: item.name, Description: item.description || "", Projects: projects.filter((project) => project.projectStatusId === item.id).length })) }] })}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>New project status</Button></>} />
+      action={<><Button icon={<Download size={16} />} onClick={() => downloadExcel({ fileName: exportFileName(user?.name, "project-statuses"), sheets: [{ name: "Project Statuses", rows: filtered.map((item) => ({ Status: item.name, Description: item.description || "", Projects: projects.filter((project) => project.projectStatusId === item.id).length })) }] })}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>New project status</Button></>} />
     <Input className="table-search" prefix={<Search size={16} />} placeholder="Search project statuses" onChange={(event) => setQuery(event.target.value)} />
     <Table className="data-table" rowKey="id" dataSource={filtered} pagination={{ pageSize: 8 }} locale={{ emptyText: <EmptyState title="No project statuses yet" description="Create statuses such as Planned, Active, or Complete." action={{ label: "New project status", onClick: () => open() }} /> }} columns={[
       { title: "Name", dataIndex: "name", sorter: (a, b) => a.name.localeCompare(b.name) },
