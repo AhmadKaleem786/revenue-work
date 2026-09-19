@@ -11,6 +11,7 @@ import {
   Col,
   Row,
   Select,
+  Segmented,
   Space,
   Table,
   Tag,
@@ -31,6 +32,7 @@ import {
 import { errorText } from "../utils/error";
 import dayjs from "dayjs";
 import { downloadExcel } from "../utils/excel";
+import { ownedAmount, ownershipShare } from "../utils/ownership";
 const id = () => crypto.randomUUID();
 export default function ProjectDetails() {
   const { id: projectId } = useParams(),
@@ -44,6 +46,7 @@ export default function ProjectDetails() {
     [del, setDel] = useState(null),
     [type, setType] = useState(""),
     [costCenterId, setCostCenterId] = useState(),
+    [financialView, setFinancialView] = useState("share"),
     [saving, setSaving] = useState(false),
     [form] = Form.useForm();
   const rows = useMemo(
@@ -69,6 +72,11 @@ export default function ProjectDetails() {
         action={{ label: "Back to projects", onClick: () => history.back() }}
       />
     );
+  const share = ownershipShare(project);
+  const isPartialOwnership = share < 100;
+  const displayedAmount = (amount) =>
+    financialView === "share" ? ownedAmount(amount, project) : amount;
+  const viewLabel = financialView === "share" ? "My share" : "Full project";
   const open = (x) => {
     setEditing(x || {});
     form.resetFields();
@@ -90,10 +98,12 @@ export default function ProjectDetails() {
               Description: project.description || "",
               "Created Date": project.createdDate || "",
               Status: statuses.find((status) => status.id === project.projectStatusId)?.name || "",
-              "Total Revenue": rev,
-              Receivable: receivable,
-              "Total Expenses": expenseTotal,
-              "Net Income": rev - expenseTotal,
+              "Ownership share": `${share}%`,
+              "Financial view": viewLabel,
+              Revenue: displayedAmount(rev),
+              Receivable: displayedAmount(receivable),
+              Expenses: displayedAmount(expenseTotal),
+              "Net Income": displayedAmount(rev - expenseTotal),
             },
           ],
         },
@@ -169,28 +179,39 @@ export default function ProjectDetails() {
         subtitle={`${project.description || `Created ${project.createdDate}`} · Status: ${statuses.find((status) => status.id === project.projectStatusId)?.name || "Not set"}`}
         action={<><Button icon={<Download size={16} />} onClick={exportProject}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>Add transaction</Button></>}
       />
+      <div className="financial-view-control">
+        <span>{isPartialOwnership ? `You own ${share}% of this project` : "You fully own this project"}</span>
+        <Segmented
+          value={financialView}
+          onChange={setFinancialView}
+          options={[
+            { label: `My share (${share}%)`, value: "share" },
+            { label: "Full project", value: "full" },
+          ]}
+        />
+      </div>
       <div className="stats-row">
         <StatCard
-          title="Total revenue"
-          value={money(rev)}
+          title={`${viewLabel} revenue`}
+          value={money(displayedAmount(rev))}
           icon={<Plus />}
           color="green"
         />
         <StatCard
-          title="Total expenses"
-          value={money(expenseTotal)}
+          title={`${viewLabel} expenses`}
+          value={money(displayedAmount(expenseTotal))}
           icon={<Trash2 />}
           color="orange"
         />
         <StatCard
-          title="Receivable"
-          value={money(receivable)}
+          title={`${viewLabel} receivable`}
+          value={money(displayedAmount(receivable))}
           icon={<Download />}
           color="orange"
         />
         <StatCard
-          title="Net Income"
-          value={money(rev - expenseTotal)}
+          title={`${viewLabel} net income`}
+          value={money(displayedAmount(rev - expenseTotal))}
           icon={<Plus />}
           color="purple"
         />

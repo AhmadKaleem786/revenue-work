@@ -24,21 +24,13 @@ import {
   Cell,
 } from "recharts";
 import { downloadExcel } from "../utils/excel";
+import { ownedAmount, ownershipShare } from "../utils/ownership";
 
 export default function Dashboard() {
   const projects = useSelector((s) => s.projects);
   const expenses = useSelector((s) => s.expenses);
   const centers = useSelector((s) => s.costCenters);
   const statuses = useSelector((s) => s.projectStatuses) || [];
-  const rev = expenses
-    .filter((x) => x.type === "Revenue")
-    .reduce((sum, x) => sum + Number(x.amount), 0);
-  const expenseTotal = expenses
-    .filter((x) => x.type === "Expense")
-    .reduce((sum, x) => sum + Number(x.amount), 0);
-  const receivable = expenses
-    .filter((x) => x.type === "Revenue" && x.isReceived === false)
-    .reduce((sum, x) => sum + Number(x.amount), 0);
   const rows = projects.map((project) => {
     const entries = expenses.filter((entry) => entry.projectId === project.id);
     const revenue = entries
@@ -50,8 +42,19 @@ export default function Dashboard() {
     const receivable = entries
       .filter((entry) => entry.type === "Revenue" && entry.isReceived === false)
       .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    return { ...project, revenue, receivable, expenseTotal, netIncome: revenue - expenseTotal };
+    const share = ownershipShare(project);
+    return {
+      ...project,
+      share,
+      revenue: ownedAmount(revenue, project),
+      receivable: ownedAmount(receivable, project),
+      expenseTotal: ownedAmount(expenseTotal, project),
+      netIncome: ownedAmount(revenue - expenseTotal, project),
+    };
   });
+  const rev = rows.reduce((sum, project) => sum + project.revenue, 0);
+  const expenseTotal = rows.reduce((sum, project) => sum + project.expenseTotal, 0);
+  const receivable = rows.reduce((sum, project) => sum + project.receivable, 0);
   const chart = rows.map((project) => ({
     name: project.name,
     revenue: project.revenue,
@@ -77,10 +80,10 @@ export default function Dashboard() {
           rows: [
             {
               "Total Projects": projects.length,
-              "Total Revenue": rev,
+              "My Revenue": rev,
               Receivable: receivable,
-              "Total Expenses": expenseTotal,
-              "Net Income": rev - expenseTotal,
+              "My Expenses": expenseTotal,
+              "My Net Income": rev - expenseTotal,
             },
           ],
         },
@@ -91,10 +94,11 @@ export default function Dashboard() {
             Description: project.description || "",
             Created: project.createdDate || "",
             Status: statuses.find((status) => status.id === project.projectStatusId)?.name || "",
-            Revenue: project.revenue,
+            "Ownership share": `${project.share}%`,
+            "My Revenue": project.revenue,
             Receivable: project.receivable,
-            Expenses: project.expenseTotal,
-            "Net Income": project.netIncome,
+            "My Expenses": project.expenseTotal,
+            "My Net Income": project.netIncome,
           })),
         },
         {
@@ -139,21 +143,21 @@ export default function Dashboard() {
           <StatCard title="Total projects" value={projects.length} icon={<FolderKanban />} />
         </Col>
         <Col xs={24} sm={12} xl={4}>
-          <StatCard title="Total revenue" value={money(rev)} icon={<Banknote />} color="green" />
+          <StatCard title="My revenue" value={money(rev)} icon={<Banknote />} color="green" />
         </Col>
         <Col xs={24} sm={12} xl={4}>
           <StatCard title="Receivable" value={money(receivable)} icon={<Clock3 />} color="orange" />
         </Col>
         <Col xs={24} sm={12} xl={4}>
-          <StatCard title="Total expenses" value={money(expenseTotal)} icon={<TrendingDown />} color="orange" />
+          <StatCard title="My expenses" value={money(expenseTotal)} icon={<TrendingDown />} color="orange" />
         </Col>
         <Col xs={24} sm={12} xl={4}>
-          <StatCard title="Net Income" value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
+          <StatCard title="My net income" value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
         </Col>
       </Row>
       <Row gutter={[20, 20]} className="section">
         <Col xs={24} xl={12}>
-          <Card title="Revenue vs. Expenses" className="chart-card">
+          <Card title="My revenue vs. expenses" className="chart-card">
             {chart.length ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={chart}>

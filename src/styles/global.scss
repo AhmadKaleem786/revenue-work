@@ -684,6 +684,16 @@ body[data-theme="dark"][data-accent="sunset"] {
   gap: 20px;
 }
 
+.financial-view-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 20px 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -979,7 +989,12 @@ body[data-theme="dark"] .project-status-pill {
   }
 
   .stats-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+  }
+
+  .financial-view-control {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .auth {

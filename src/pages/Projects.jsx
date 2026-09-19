@@ -4,6 +4,7 @@ import {
   DatePicker,
   Form,
   Input,
+  InputNumber,
   Modal,
   Select,
   Space,
@@ -19,6 +20,7 @@ import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import { downloadExcel } from "../utils/excel";
+import { ownershipShare } from "../utils/ownership";
 const key = () => crypto.randomUUID();
 export default function Projects() {
   const data = useSelector((s) => s.projects),
@@ -62,8 +64,8 @@ export default function Projects() {
     form.resetFields();
     form.setFieldsValue(
       x
-        ? { ...x, createdDate: dayjs(x.createdDate) }
-        : { createdDate: dayjs() },
+        ? { ...x, ownershipShare: ownershipShare(x), createdDate: dayjs(x.createdDate) }
+        : { createdDate: dayjs(), ownershipShare: 100 },
     );
   };
   const exportProjects = () =>
@@ -76,6 +78,7 @@ export default function Projects() {
             Project: project.name,
             Description: project.description || "",
             "Created Date": project.createdDate || "",
+            "Ownership share": `${ownershipShare(project)}%`,
             Status:
               statuses.find((item) => item.id === project.projectStatusId)
                 ?.name || "",
@@ -101,6 +104,7 @@ export default function Projects() {
         name: v.name,
         description: v.description || "",
         projectStatusId: v.projectStatusId,
+        ownershipShare: Number(v.ownershipShare),
         createdDate: v.createdDate.format("YYYY-MM-DD"),
         id: editing.id || key(),
         createdAt: editing.createdAt || now,
@@ -265,6 +269,17 @@ export default function Projects() {
               rows={3}
               placeholder="Optional project description"
             />
+          </Form.Item>
+          <Form.Item
+            label="Your ownership share"
+            name="ownershipShare"
+            extra="Dashboard financial reporting is calculated using this share."
+            rules={[
+              { required: true, message: "Please enter your ownership share" },
+              { type: "number", min: 0, max: 100, message: "Share must be between 0% and 100%" },
+            ]}
+          >
+            <InputNumber min={0} max={100} precision={2} addonAfter="%" style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item
             label="Project status"
