@@ -50,7 +50,10 @@ export default function Projects() {
             expenseTotal = e
               .filter((x) => x.type === "Expense")
               .reduce((a, x) => a + Number(x.amount), 0);
-          return { ...p, r, expenseTotal, netIncome: r - expenseTotal };
+          const receivable = e
+            .filter((x) => x.type === "Revenue" && x.isReceived === false)
+            .reduce((a, x) => a + Number(x.amount), 0);
+          return { ...p, r, receivable, expenseTotal, netIncome: r - expenseTotal };
         }),
     [data, expenses, query, status],
   );
@@ -77,6 +80,7 @@ export default function Projects() {
               statuses.find((item) => item.id === project.projectStatusId)
                 ?.name || "",
             Revenue: project.r,
+            Receivable: project.receivable,
             Expenses: project.expenseTotal,
             "Net Income": project.netIncome,
           })),
@@ -189,6 +193,12 @@ export default function Projects() {
             dataIndex: "projectStatusId",
             render: (value) =>
               statuses.find((item) => item.id === value)?.name || "—",
+          },
+          {
+            title: "Receivable",
+            dataIndex: "receivable",
+            render: money,
+            responsive: ["xl"],
           },
           {
             title: "Expenses",

@@ -4,6 +4,7 @@ import {
   Banknote,
   Download,
   FolderKanban,
+  Clock3,
   TrendingDown,
   Wallet,
 } from "lucide-react";
@@ -35,6 +36,9 @@ export default function Dashboard() {
   const expenseTotal = expenses
     .filter((x) => x.type === "Expense")
     .reduce((sum, x) => sum + Number(x.amount), 0);
+  const receivable = expenses
+    .filter((x) => x.type === "Revenue" && x.isReceived === false)
+    .reduce((sum, x) => sum + Number(x.amount), 0);
   const rows = projects.map((project) => {
     const entries = expenses.filter((entry) => entry.projectId === project.id);
     const revenue = entries
@@ -43,7 +47,10 @@ export default function Dashboard() {
     const expenseTotal = entries
       .filter((entry) => entry.type === "Expense")
       .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    return { ...project, revenue, expenseTotal, netIncome: revenue - expenseTotal };
+    const receivable = entries
+      .filter((entry) => entry.type === "Revenue" && entry.isReceived === false)
+      .reduce((sum, entry) => sum + Number(entry.amount), 0);
+    return { ...project, revenue, receivable, expenseTotal, netIncome: revenue - expenseTotal };
   });
   const chart = rows.map((project) => ({
     name: project.name,
@@ -71,6 +78,7 @@ export default function Dashboard() {
             {
               "Total Projects": projects.length,
               "Total Revenue": rev,
+              Receivable: receivable,
               "Total Expenses": expenseTotal,
               "Net Income": rev - expenseTotal,
             },
@@ -84,6 +92,7 @@ export default function Dashboard() {
             Created: project.createdDate || "",
             Status: statuses.find((status) => status.id === project.projectStatusId)?.name || "",
             Revenue: project.revenue,
+            Receivable: project.receivable,
             Expenses: project.expenseTotal,
             "Net Income": project.netIncome,
           })),
@@ -99,6 +108,7 @@ export default function Dashboard() {
             )?.name || "",
             Description: expense.description || "",
             Type: expense.type || "",
+            "Payment Status": expense.type === "Revenue" ? (expense.isReceived === false ? "Receivable" : "Received") : "N/A",
             Amount: Number(expense.amount) || 0,
             Notes: expense.notes || "",
           })),
@@ -125,16 +135,19 @@ export default function Dashboard() {
         }
       />
       <Row gutter={[20, 20]}>
-        <Col xs={24} sm={12} xl={6}>
+        <Col xs={24} sm={12} xl={4}>
           <StatCard title="Total projects" value={projects.length} icon={<FolderKanban />} />
         </Col>
-        <Col xs={24} sm={12} xl={6}>
+        <Col xs={24} sm={12} xl={4}>
           <StatCard title="Total revenue" value={money(rev)} icon={<Banknote />} color="green" />
         </Col>
-        <Col xs={24} sm={12} xl={6}>
+        <Col xs={24} sm={12} xl={4}>
+          <StatCard title="Receivable" value={money(receivable)} icon={<Clock3 />} color="orange" />
+        </Col>
+        <Col xs={24} sm={12} xl={4}>
           <StatCard title="Total expenses" value={money(expenseTotal)} icon={<TrendingDown />} color="orange" />
         </Col>
-        <Col xs={24} sm={12} xl={6}>
+        <Col xs={24} sm={12} xl={4}>
           <StatCard title="Net Income" value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
         </Col>
       </Row>
@@ -189,6 +202,12 @@ export default function Dashboard() {
                   title: "Project",
                   dataIndex: "name",
                   render: (value, record) => <Link to={`/projects/${record.id}`}>{value}</Link>,
+                },
+                {
+                  title: "Receivable",
+                  dataIndex: "receivable",
+                  render: money,
+                  responsive: ["md"],
                 },
                 {
                   title: "Net Income",

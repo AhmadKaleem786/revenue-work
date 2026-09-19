@@ -109,7 +109,7 @@ function GlobalSearch() {
 
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const nav = useNavigate();
   const loc = useLocation();
   const dispatch = useDispatch();
@@ -217,9 +217,7 @@ export default function AppLayout() {
               overlayClassName="profile-dropdown"
             >
               <button className="profile-trigger" type="button">
-                <Avatar src={user?.logo} >
-                  {user?.name?.[0] || "A"}
-                </Avatar>
+                <Avatar src={user?.logo}>{user?.name?.[0] || "A"}</Avatar>
                 <span className="profile-trigger__meta">
                   <strong>{user?.name || "Account"}</strong>
                   <small>{user?.email || "Workspace owner"}</small>

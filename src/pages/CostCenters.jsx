@@ -49,11 +49,15 @@ export default function CostCenters() {
             const expenseTotal = transactions
               .filter((expense) => expense.type === "Expense")
               .reduce((sum, expense) => sum + Number(expense.amount), 0);
+            const receivable = transactions
+              .filter((expense) => expense.type === "Revenue" && expense.isReceived === false)
+              .reduce((sum, expense) => sum + Number(expense.amount), 0);
             return {
               "Cost Center": center.name,
               Description: center.description || "",
               Transactions: transactions.length,
               Revenue: revenue,
+              Receivable: receivable,
               Expenses: expenseTotal,
               "Net Income": revenue - expenseTotal,
             };

@@ -2,18 +2,22 @@ import React, { useMemo, useState } from "react";
 import {
   Button,
   Card,
+  Checkbox,
   DatePicker,
   Form,
   Input,
   InputNumber,
   Modal,
+  Col,
+  Row,
   Select,
   Space,
   Table,
   Tag,
+  Tooltip,
   message,
 } from "antd";
-import { ArrowLeft, Download, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Download, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteRecordThunk, saveRecordThunk } from "../store";
@@ -55,6 +59,9 @@ export default function ProjectDetails() {
     expenseTotal = rows
       .filter((x) => x.type === "Expense")
       .reduce((a, x) => a + Number(x.amount), 0);
+  const receivable = rows
+    .filter((x) => x.type === "Revenue" && x.isReceived === false)
+    .reduce((a, x) => a + Number(x.amount), 0);
   if (!project)
     return (
       <EmptyState
@@ -66,7 +73,9 @@ export default function ProjectDetails() {
     setEditing(x || {});
     form.resetFields();
     form.setFieldsValue(
-      x ? { ...x, date: dayjs(x.date) } : { type: "Revenue", date: dayjs() },
+      x
+        ? { ...x, date: dayjs(x.date), isReceived: x.type === "Revenue" ? x.isReceived !== false : true }
+        : { type: "Revenue", isReceived: true, date: dayjs() },
     );
   };
   const exportProject = () =>
@@ -82,6 +91,7 @@ export default function ProjectDetails() {
               "Created Date": project.createdDate || "",
               Status: statuses.find((status) => status.id === project.projectStatusId)?.name || "",
               "Total Revenue": rev,
+              Receivable: receivable,
               "Total Expenses": expenseTotal,
               "Net Income": rev - expenseTotal,
             },
@@ -93,6 +103,7 @@ export default function ProjectDetails() {
             Date: transaction.date || "",
             Description: transaction.description || "",
             Type: transaction.type || "",
+            "Payment Status": transaction.type === "Revenue" ? (transaction.isReceived === false ? "Receivable" : "Received") : "N/A",
             "Cost Center": centers.find((center) => center.id === transaction.costCenterId)?.name || "",
             Amount: Number(transaction.amount) || 0,
             Notes: transaction.notes || "",
@@ -115,6 +126,7 @@ export default function ProjectDetails() {
         costCenterId: v.costCenterId,
         description: v.description,
         type: v.type,
+        isReceived: v.type === "Revenue" ? v.isReceived !== false : true,
         amount: Number(v.amount),
         date: v.date.format("YYYY-MM-DD"),
         notes: v.notes || "",
@@ -133,6 +145,18 @@ export default function ProjectDetails() {
       throw error;
     } finally {
       setSaving(false);
+    }
+  };
+  const markReceived = async (transaction) => {
+    try {
+      await dispatch(saveRecordThunk({
+        collection: "expenses",
+        item: { ...transaction, isReceived: true, updatedAt: new Date().toISOString() },
+        userId: user?.uid,
+      })).unwrap();
+      message.success("Transaction marked as received.");
+    } catch (error) {
+      message.error(errorText(error, "Could not update this transaction."));
     }
   };
   return (
@@ -156,6 +180,12 @@ export default function ProjectDetails() {
           title="Total expenses"
           value={money(expenseTotal)}
           icon={<Trash2 />}
+          color="orange"
+        />
+        <StatCard
+          title="Receivable"
+          value={money(receivable)}
+          icon={<Download />}
           color="orange"
         />
         <StatCard
@@ -208,6 +238,20 @@ export default function ProjectDetails() {
             },
             { title: "Amount", dataIndex: "amount", render: money },
             { title: "Date", dataIndex: "date", responsive: ["md"] },
+            {
+              title: "Mark received",
+              render: (_, record) =>
+                record.type === "Revenue" && record.isReceived === false ? (
+                  <Tooltip title="Mark as received">
+                    <Button
+                      type="text"
+                      aria-label="Mark as received"
+                      icon={<CheckCircle2 size={17} />}
+                      onClick={() => markReceived(record)}
+                    />
+                  </Tooltip>
+                ) : "—",
+            },
             {
               title: "Actions",
               render: (_, r) => (
@@ -264,39 +308,52 @@ export default function ProjectDetails() {
           >
             <Input placeholder="Transaction purpose" />
           </Form.Item>
-          <Form.Item
-            label="Type"
-            name="type"
-            rules={[
-              { required: true, message: "Please select a transaction type" },
-            ]}
-          >
-            <Select
-              options={[
-                { value: "Revenue", label: "Revenue" },
-                { value: "Expense", label: "Expense" },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item
-            label="Amount"
-            name="amount"
-            rules={[
-              { required: true, message: "Please enter an amount" },
-              {
-                type: "number",
-                min: 0.01,
-                message: "Amount must be greater than 0",
-              },
-            ]}
-          >
-            <InputNumber
-              min={0.01}
-              step={0.01}
-              style={{ width: "100%" }}
-              formatter={(value) => (value ? `PKR ${value}` : "")}
-              parser={(value) => value?.replace(/[^0-9.]/g, "")}
-            />
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="Type"
+                name="type"
+                rules={[
+                  { required: true, message: "Please select a transaction type" },
+                ]}
+              >
+                <Select
+                  options={[
+                    { value: "Revenue", label: "Revenue" },
+                    { value: "Expense", label: "Expense" },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="Amount"
+                name="amount"
+                rules={[
+                  { required: true, message: "Please enter an amount" },
+                  {
+                    type: "number",
+                    min: 0.01,
+                    message: "Amount must be greater than 0",
+                  },
+                ]}
+              >
+                <InputNumber
+                  min={0.01}
+                  step={0.01}
+                  style={{ width: "100%" }}
+                  formatter={(value) => (value ? `PKR ${value}` : "")}
+                  parser={(value) => value?.replace(/[^0-9.]/g, "")}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item noStyle shouldUpdate={(previous, current) => previous.type !== current.type}>
+            {({ getFieldValue }) => getFieldValue("type") === "Revenue" && (
+              <Form.Item name="isReceived" valuePropName="checked">
+                <Checkbox>Payment has been received</Checkbox>
+              </Form.Item>
+            )}
           </Form.Item>
           <Form.Item
             label="Date"
