@@ -140,20 +140,22 @@ export default function Dashboard() {
         }
       />
       <Row gutter={[20, 20]}>
-        <Col xs={24} sm={12} xl={4}>
+        <Col xs={24} sm={12}>
           <StatCard title="Total projects" value={projects.length} icon={<FolderKanban />} />
         </Col>
-        <Col xs={24} sm={12} xl={4}>
+        <Col xs={24} sm={12}>
+          <StatCard title="My net income" value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
+        </Col>
+      </Row>
+      <Row gutter={[20, 20]} className="section">
+        <Col xs={24} sm={8}>
           <StatCard title="My revenue" value={money(rev)} icon={<Banknote />} color="green" />
         </Col>
-        <Col xs={24} sm={12} xl={4}>
+        <Col xs={24} sm={8}>
           <StatCard title="Receivable" value={money(receivable)} icon={<Clock3 />} color="orange" />
         </Col>
-        <Col xs={24} sm={12} xl={4}>
+        <Col xs={24} sm={8}>
           <StatCard title="My expenses" value={money(expenseTotal)} icon={<TrendingDown />} color="orange" />
-        </Col>
-        <Col xs={24} sm={12} xl={4}>
-          <StatCard title="My net income" value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
         </Col>
       </Row>
       <Row gutter={[20, 20]} className="section">
