@@ -16,6 +16,7 @@ export function TransactionsTable({
   onAdopt,
   onDelete,
   onMarkReceived,
+  emptyDescription = "Record revenue or expenses for this project.",
 }) {
   return (
     <Card
@@ -50,7 +51,7 @@ export function TransactionsTable({
           emptyText: (
             <EmptyState
               title="No transactions yet"
-              description="Record revenue or expenses for this project."
+              description={emptyDescription}
               action={{ label: "Add transaction", onClick: onAdd }}
             />
           ),

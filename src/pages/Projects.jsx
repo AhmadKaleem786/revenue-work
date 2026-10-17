@@ -20,6 +20,7 @@ import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import { downloadExcel, exportFileName } from "../utils/excel";
+import { isCompanyTransaction } from "../utils/finance";
 import { ownershipShare } from "../utils/ownership";
 const key = () => crypto.randomUUID();
 export default function Projects() {
@@ -45,7 +46,7 @@ export default function Projects() {
             (!status || x.projectStatusId === status),
         )
         .map((p) => {
-          const e = expenses.filter((x) => x.projectId === p.id),
+          const e = expenses.filter((x) => !isCompanyTransaction(x) && x.projectId === p.id),
             r = e
               .filter((x) => x.type === "Revenue")
               .reduce((a, x) => a + Number(x.amount), 0),

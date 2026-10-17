@@ -23,6 +23,7 @@ const Auth = lazy(() => import("../pages/Auth")),
   Projects = lazy(() => import("../pages/Projects")),
   ProjectDetails = lazy(() => import("../pages/ProjectDetails")),
   CostCenters = lazy(() => import("../pages/CostCenters")),
+  CompanyTransactions = lazy(() => import("../pages/CompanyTransactions")),
   ProjectStatuses = lazy(() => import("../pages/ProjectStatuses")),
   Profile = lazy(() => import("../pages/Profile"));
 
@@ -147,6 +148,7 @@ export default function App() {
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetails />} />
             <Route path="/cost-centers" element={<CostCenters />} />
+            <Route path="/company-transactions" element={<CompanyTransactions />} />
             <Route path="/project-statuses" element={<ProjectStatuses />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Profile settings />} />

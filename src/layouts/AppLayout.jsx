@@ -17,6 +17,7 @@ import {
   BarChart3,
   Building2,
   ListChecks,
+  Receipt,
   FolderKanban,
   LogOut,
   Menu as MenuIcon,
@@ -32,6 +33,7 @@ import { BrandMark } from "../components/UI";
 import { firebaseEnabled } from "../services/firebase/config";
 import { signOutUser } from "../services/firebase/auth";
 import { logout, resetWorkspace, toggleDark } from "../store";
+import { TRANSACTION_SCOPE } from "../utils/finance";
 
 const { Header, Sider, Content } = Layout;
 
@@ -80,7 +82,7 @@ function GlobalSearch() {
           )
           .slice(0, 5)
           .map((item) => ({
-            value: `/projects/${item.projectId}`,
+            value: item.scope === TRANSACTION_SCOPE.COMPANY ? "/company-transactions" : `/projects/${item.projectId}`,
             label: item.description,
           })),
       ),
@@ -126,6 +128,7 @@ export default function AppLayout() {
   const items = [
     ["/dashboard", <BarChart3 size={16} />, "Dashboard"],
     ["/projects", <FolderKanban size={16} />, "Projects"],
+    ["/company-transactions", <Receipt size={16} />, "Company transactions"],
     ["/cost-centers", <Building2 size={16} />, "Cost centers"],
     ["/project-statuses", <ListChecks size={16} />, "Project statuses"],
   ].map(([key, icon, label]) => ({ key, icon, label }));

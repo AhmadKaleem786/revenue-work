@@ -14,7 +14,11 @@ import { TransactionFormModal } from "../components/projectDetails/TransactionFo
 import { TransactionsTable } from "../components/projectDetails/TransactionsTable";
 import { errorText } from "../utils/error";
 import { downloadExcel, exportFileName } from "../utils/excel";
-import { TRANSACTION_TYPE } from "../utils/finance";
+import {
+  TRANSACTION_SCOPE,
+  TRANSACTION_TYPE,
+  isCompanyTransaction,
+} from "../utils/finance";
 import { ownedAmount, ownershipShare } from "../utils/ownership";
 
 dayjs.extend(customParseFormat);
@@ -66,6 +70,7 @@ export default function ProjectDetails() {
     () =>
       allTransactions.filter(
         (transaction) =>
+          !isCompanyTransaction(transaction) &&
           transaction.projectId === projectId &&
           (!type || transaction.type === type) &&
           (!costCenterId || transaction.costCenterId === costCenterId),
@@ -179,6 +184,7 @@ export default function ProjectDetails() {
     try {
       const now = new Date().toISOString();
       const item = {
+        scope: TRANSACTION_SCOPE.PROJECT,
         projectId,
         costCenterId: values.costCenterId,
         description: values.description,
@@ -297,6 +303,7 @@ export default function ProjectDetails() {
             `Row ${rowNumber}: Payment Status must be Received or Receivable.`,
           );
         return {
+          scope: TRANSACTION_SCOPE.PROJECT,
           projectId,
           costCenterId: importedCostCenterId,
           description,

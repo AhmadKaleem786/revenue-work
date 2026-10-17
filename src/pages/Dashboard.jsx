@@ -24,7 +24,11 @@ import {
   Cell,
 } from "recharts";
 import { downloadExcel, exportFileName } from "../utils/excel";
-import { TRANSACTION_TYPE } from "../utils/finance";
+import {
+  TRANSACTION_TYPE,
+  isCompanyTransaction,
+  transactionTotals,
+} from "../utils/finance";
 import { ownedAmount, ownershipShare } from "../utils/ownership";
 
 export default function Dashboard() {
@@ -36,10 +40,21 @@ export default function Dashboard() {
   const [financialView, setFinancialView] = useState("share");
   const showShare = financialView === "share";
   const viewLabel = showShare ? "My" : "Total";
+  const companyEntries = useMemo(
+    () => expenses.filter(isCompanyTransaction),
+    [expenses],
+  );
+  const company = useMemo(
+    () => transactionTotals(companyEntries),
+    [companyEntries],
+  );
   const rows = useMemo(
     () =>
       projects.map((project) => {
-        const entries = expenses.filter((entry) => entry.projectId === project.id);
+        const entries = expenses.filter(
+          (entry) =>
+            !isCompanyTransaction(entry) && entry.projectId === project.id,
+        );
         const revenue = entries
           .filter((entry) => entry.type === TRANSACTION_TYPE.REVENUE)
           .reduce((sum, entry) => sum + Number(entry.amount), 0);
@@ -65,14 +80,44 @@ export default function Dashboard() {
       }),
     [expenses, projects, showShare],
   );
-  const rev = rows.reduce((sum, project) => sum + project.revenue, 0);
-  const expenseTotal = rows.reduce((sum, project) => sum + project.expenseTotal, 0);
-  const receivable = rows.reduce((sum, project) => sum + project.receivable, 0);
-  const chart = rows.map((project) => ({
-    name: project.name,
-    revenue: project.revenue,
-    expenses: project.expenseTotal,
-  }));
+  const rev =
+    rows.reduce((sum, project) => sum + project.revenue, 0) + company.revenue;
+  const expenseTotal =
+    rows.reduce((sum, project) => sum + project.expenseTotal, 0) +
+    company.expenses;
+  const receivable =
+    rows.reduce((sum, project) => sum + project.receivable, 0) +
+    company.receivable;
+  const chart = [
+    ...rows.map((project) => ({
+      name: project.name,
+      revenue: project.revenue,
+      expenses: project.expenseTotal,
+    })),
+    ...(companyEntries.length
+      ? [
+          {
+            name: "Company",
+            revenue: company.revenue,
+            expenses: company.expenses,
+          },
+        ]
+      : []),
+  ];
+  const overviewRows = [
+    ...(companyEntries.length
+      ? [
+          {
+            id: "company",
+            name: "Company",
+            receivable: company.receivable,
+            netIncome: company.netIncome,
+            isCompany: true,
+          },
+        ]
+      : []),
+    ...rows.slice(0, 5),
+  ];
   const statusChart = [
     ...statuses.map((status) => ({
       name: status.name,
@@ -98,6 +143,10 @@ export default function Dashboard() {
               [`${viewLabel} Receivable`]: receivable,
               [`${viewLabel} Expenses`]: expenseTotal,
               [`${viewLabel} Net Income`]: rev - expenseTotal,
+              "Company Revenue": company.revenue,
+              "Company Receivable": company.receivable,
+              "Company Expenses": company.expenses,
+              "Company Net Income": company.netIncome,
             },
           ],
         },
@@ -119,8 +168,11 @@ export default function Dashboard() {
           name: "Transactions",
           rows: expenses.map((expense) => ({
             Date: expense.date || "",
-            Project: projects.find((project) => project.id === expense.projectId)
-              ?.name || "",
+            Scope: isCompanyTransaction(expense) ? "Company" : "Project",
+            Project: isCompanyTransaction(expense)
+              ? "Company"
+              : projects.find((project) => project.id === expense.projectId)
+                  ?.name || "",
             "Cost Center": centers.find(
               (center) => center.id === expense.costCenterId,
             )?.name || "",
@@ -155,8 +207,8 @@ export default function Dashboard() {
       <div className="financial-view-control">
         <span>
           {showShare
-            ? "Figures use your ownership share on each project"
-            : "Figures use the full amount of every project"}
+            ? "Project figures use your ownership share. Company transactions are counted in full."
+            : "Project figures use the full amount of every project. Company transactions are counted in full."}
         </span>
         <Segmented
           value={financialView}
@@ -226,7 +278,7 @@ export default function Dashboard() {
           <Card title="Projects">
             <Table
               size="small"
-              dataSource={rows.slice(0, 5)}
+              dataSource={overviewRows}
               rowKey="id"
               pagination={false}
               locale={{
@@ -236,7 +288,12 @@ export default function Dashboard() {
                 {
                   title: "Project",
                   dataIndex: "name",
-                  render: (value, record) => <Link to={`/projects/${record.id}`}>{value}</Link>,
+                  render: (value, record) =>
+                    record.isCompany ? (
+                      <Link to="/company-transactions">{value}</Link>
+                    ) : (
+                      <Link to={`/projects/${record.id}`}>{value}</Link>
+                    ),
                 },
                 {
                   title: `${viewLabel} receivable`,
