@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Card, Select, Space, Table, Tag, Tooltip } from "antd";
-import { CheckCircle2, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle2, CopyPlus, Pencil, Trash2 } from "lucide-react";
 import { EmptyState, money } from "../UI";
 import { TRANSACTION_TYPE } from "../../utils/finance";
 
@@ -13,6 +13,7 @@ export function TransactionsTable({
   onCostCenterChange,
   onAdd,
   onEdit,
+  onAdopt,
   onDelete,
   onMarkReceived,
 }) {
@@ -85,6 +86,9 @@ export function TransactionsTable({
             title: "Actions",
             render: (_, record) => (
               <Space>
+                <Tooltip title="Adopt transaction">
+                  <Button type="text" aria-label="Adopt transaction" icon={<CopyPlus size={16} />} onClick={() => onAdopt(record)} />
+                </Tooltip>
                 <Button type="text" icon={<Pencil size={16} />} onClick={() => onEdit(record)} />
                 <Button type="text" danger icon={<Trash2 size={16} />} onClick={() => onDelete(record)} />
               </Space>

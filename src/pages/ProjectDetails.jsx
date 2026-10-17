@@ -116,6 +116,14 @@ export default function ProjectDetails() {
         : { type: TRANSACTION_TYPE.REVENUE, isReceived: true, date: dayjs() },
     );
   };
+  const adoptTransaction = (transaction) =>
+    openEditor({
+      ...transaction,
+      id: undefined,
+      createdAt: undefined,
+      updatedAt: undefined,
+      createdBy: undefined,
+    });
   const exportProject = () =>
     downloadExcel({
       fileName: exportFileName(user?.name, project.name),
@@ -403,6 +411,7 @@ export default function ProjectDetails() {
         onCostCenterChange={setCostCenterId}
         onAdd={() => openEditor()}
         onEdit={openEditor}
+        onAdopt={adoptTransaction}
         onDelete={setDeleting}
         onMarkReceived={markReceived}
       />
