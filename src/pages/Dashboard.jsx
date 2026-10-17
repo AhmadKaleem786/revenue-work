@@ -1,5 +1,5 @@
-import React from "react";
-import { Button, Card, Col, Row, Table, Tag } from "antd";
+import React, { useMemo, useState } from "react";
+import { Button, Card, Col, Row, Segmented, Table, Tag } from "antd";
 import {
   Banknote,
   Download,
@@ -24,6 +24,7 @@ import {
   Cell,
 } from "recharts";
 import { downloadExcel, exportFileName } from "../utils/excel";
+import { TRANSACTION_TYPE } from "../utils/finance";
 import { ownedAmount, ownershipShare } from "../utils/ownership";
 
 export default function Dashboard() {
@@ -32,27 +33,38 @@ export default function Dashboard() {
   const centers = useSelector((s) => s.costCenters);
   const statuses = useSelector((s) => s.projectStatuses) || [];
   const user = useSelector((s) => s.auth);
-  const rows = projects.map((project) => {
-    const entries = expenses.filter((entry) => entry.projectId === project.id);
-    const revenue = entries
-      .filter((entry) => entry.type === "Revenue")
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    const expenseTotal = entries
-      .filter((entry) => entry.type === "Expense")
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    const receivable = entries
-      .filter((entry) => entry.type === "Revenue" && entry.isReceived === false)
-      .reduce((sum, entry) => sum + Number(entry.amount), 0);
-    const share = ownershipShare(project);
-    return {
-      ...project,
-      share,
-      revenue: ownedAmount(revenue, project),
-      receivable: ownedAmount(receivable, project),
-      expenseTotal: ownedAmount(expenseTotal, project),
-      netIncome: ownedAmount(revenue - expenseTotal, project),
-    };
-  });
+  const [financialView, setFinancialView] = useState("share");
+  const showShare = financialView === "share";
+  const viewLabel = showShare ? "My" : "Total";
+  const rows = useMemo(
+    () =>
+      projects.map((project) => {
+        const entries = expenses.filter((entry) => entry.projectId === project.id);
+        const revenue = entries
+          .filter((entry) => entry.type === TRANSACTION_TYPE.REVENUE)
+          .reduce((sum, entry) => sum + Number(entry.amount), 0);
+        const expenseTotal = entries
+          .filter((entry) => entry.type === TRANSACTION_TYPE.EXPENSE)
+          .reduce((sum, entry) => sum + Number(entry.amount), 0);
+        const receivable = entries
+          .filter(
+            (entry) =>
+              entry.type === TRANSACTION_TYPE.REVENUE && entry.isReceived === false,
+          )
+          .reduce((sum, entry) => sum + Number(entry.amount), 0);
+        const display = (amount) =>
+          showShare ? ownedAmount(amount, project) : amount;
+        return {
+          ...project,
+          share: ownershipShare(project),
+          revenue: display(revenue),
+          receivable: display(receivable),
+          expenseTotal: display(expenseTotal),
+          netIncome: display(revenue - expenseTotal),
+        };
+      }),
+    [expenses, projects, showShare],
+  );
   const rev = rows.reduce((sum, project) => sum + project.revenue, 0);
   const expenseTotal = rows.reduce((sum, project) => sum + project.expenseTotal, 0);
   const receivable = rows.reduce((sum, project) => sum + project.receivable, 0);
@@ -81,10 +93,11 @@ export default function Dashboard() {
           rows: [
             {
               "Total Projects": projects.length,
-              "My Revenue": rev,
-              Receivable: receivable,
-              "My Expenses": expenseTotal,
-              "My Net Income": rev - expenseTotal,
+              "Financial view": showShare ? "My share" : "Total",
+              [`${viewLabel} Revenue`]: rev,
+              [`${viewLabel} Receivable`]: receivable,
+              [`${viewLabel} Expenses`]: expenseTotal,
+              [`${viewLabel} Net Income`]: rev - expenseTotal,
             },
           ],
         },
@@ -96,10 +109,10 @@ export default function Dashboard() {
             Created: project.createdDate || "",
             Status: statuses.find((status) => status.id === project.projectStatusId)?.name || "",
             "Ownership share": `${project.share}%`,
-            "My Revenue": project.revenue,
-            Receivable: project.receivable,
-            "My Expenses": project.expenseTotal,
-            "My Net Income": project.netIncome,
+            [`${viewLabel} Revenue`]: project.revenue,
+            [`${viewLabel} Receivable`]: project.receivable,
+            [`${viewLabel} Expenses`]: project.expenseTotal,
+            [`${viewLabel} Net Income`]: project.netIncome,
           })),
         },
         {
@@ -113,7 +126,7 @@ export default function Dashboard() {
             )?.name || "",
             Description: expense.description || "",
             Type: expense.type || "",
-            "Payment Status": expense.type === "Revenue" ? (expense.isReceived === false ? "Receivable" : "Received") : "N/A",
+            "Payment Status": expense.type === TRANSACTION_TYPE.REVENUE ? (expense.isReceived === false ? "Receivable" : "Received") : "N/A",
             Amount: Number(expense.amount) || 0,
             Notes: expense.notes || "",
           })),
@@ -139,28 +152,43 @@ export default function Dashboard() {
           </Button>
         }
       />
+      <div className="financial-view-control">
+        <span>
+          {showShare
+            ? "Figures use your ownership share on each project"
+            : "Figures use the full amount of every project"}
+        </span>
+        <Segmented
+          value={financialView}
+          onChange={setFinancialView}
+          options={[
+            { label: "My share", value: "share" },
+            { label: "Total", value: "full" },
+          ]}
+        />
+      </div>
       <Row gutter={[20, 20]}>
         <Col xs={24} sm={12}>
           <StatCard title="Total projects" value={projects.length} icon={<FolderKanban />} />
         </Col>
         <Col xs={24} sm={12}>
-          <StatCard title="My net income" value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
+          <StatCard title={`${viewLabel} net income`} value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
         </Col>
       </Row>
       <Row gutter={[20, 20]} className="section">
         <Col xs={24} sm={8}>
-          <StatCard title="My revenue" value={money(rev)} icon={<Banknote />} color="green" />
+          <StatCard title={`${viewLabel} revenue`} value={money(rev)} icon={<Banknote />} color="green" />
         </Col>
         <Col xs={24} sm={8}>
-          <StatCard title="Receivable" value={money(receivable)} icon={<Clock3 />} color="orange" />
+          <StatCard title={`${viewLabel} receivable`} value={money(receivable)} icon={<Clock3 />} color="orange" />
         </Col>
         <Col xs={24} sm={8}>
-          <StatCard title="My expenses" value={money(expenseTotal)} icon={<TrendingDown />} color="orange" />
+          <StatCard title={`${viewLabel} expenses`} value={money(expenseTotal)} icon={<TrendingDown />} color="orange" />
         </Col>
       </Row>
       <Row gutter={[20, 20]} className="section">
         <Col xs={24} xl={12}>
-          <Card title="My revenue vs. expenses" className="chart-card">
+          <Card title={`${viewLabel} revenue vs. expenses`} className="chart-card">
             {chart.length ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={chart}>
@@ -211,13 +239,13 @@ export default function Dashboard() {
                   render: (value, record) => <Link to={`/projects/${record.id}`}>{value}</Link>,
                 },
                 {
-                  title: "Receivable",
+                  title: `${viewLabel} receivable`,
                   dataIndex: "receivable",
                   render: money,
                   responsive: ["md"],
                 },
                 {
-                  title: "Net Income",
+                  title: `${viewLabel} net income`,
                   dataIndex: "netIncome",
                   render: (value) => <Tag color={value >= 0 ? "green" : "red"}>{money(value)}</Tag>,
                 },
