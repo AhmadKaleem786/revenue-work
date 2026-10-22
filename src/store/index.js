@@ -7,7 +7,7 @@ import {
 import { firebaseEnabled } from "../services/firebase/config";
 import { deleteRecord, deleteRecords, saveRecord } from "../services/api";
 import { errorText } from "../utils/error";
-import { normalizeTransactions } from "../utils/finance";
+import { normalizeTransaction, normalizeTransactions } from "../utils/finance";
 
 const saved = firebaseEnabled
   ? {}
@@ -50,7 +50,10 @@ const applyRecordThunks = (builder, collection) => {
     .addCase(resetWorkspace, () => [])
     .addCase(saveRecordThunk.fulfilled, (state, action) => {
       if (action.payload.collection !== collection) return;
-      const item = action.payload.item;
+      const item =
+        collection === "expenses"
+          ? normalizeTransaction(action.payload.item)
+          : action.payload.item;
       const index = state.findIndex((row) => row.id === item.id);
       if (index > -1) state[index] = item;
       else state.unshift(item);

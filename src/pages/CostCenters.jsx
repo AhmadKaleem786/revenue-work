@@ -6,6 +6,7 @@ import { DeleteConfirm, EmptyState, PageHeader } from "../components/UI";
 import { errorText } from "../utils/error";
 import { Download, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { downloadExcel, exportFileName } from "../utils/excel";
+import { transactionTotals } from "../utils/finance";
 const key = () => crypto.randomUUID();
 export default function CostCenters() {
   const data = useSelector((s) => s.costCenters) || [];
@@ -43,23 +44,15 @@ export default function CostCenters() {
             const transactions = expenses.filter(
               (expense) => expense.costCenterId === center.id,
             );
-            const revenue = transactions
-              .filter((expense) => expense.type === "Revenue")
-              .reduce((sum, expense) => sum + Number(expense.amount), 0);
-            const expenseTotal = transactions
-              .filter((expense) => expense.type === "Expense")
-              .reduce((sum, expense) => sum + Number(expense.amount), 0);
-            const receivable = transactions
-              .filter((expense) => expense.type === "Revenue" && expense.isReceived === false)
-              .reduce((sum, expense) => sum + Number(expense.amount), 0);
+            const totals = transactionTotals(transactions);
             return {
               "Cost Center": center.name,
               Description: center.description || "",
               Transactions: transactions.length,
-              Revenue: revenue,
-              Receivable: receivable,
-              Expenses: expenseTotal,
-              "Net Income": revenue - expenseTotal,
+              Revenue: totals.revenue,
+              Receivable: totals.receivable,
+              Expenses: totals.expenses,
+              "Net Income": totals.netIncome,
             };
           }),
         },

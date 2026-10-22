@@ -24,11 +24,7 @@ import {
   Cell,
 } from "recharts";
 import { downloadExcel, exportFileName } from "../utils/excel";
-import {
-  TRANSACTION_TYPE,
-  isCompanyTransaction,
-  transactionTotals,
-} from "../utils/finance";
+import { isCompanyTransaction, transactionTotals } from "../utils/finance";
 import { ownedAmount, ownershipShare } from "../utils/ownership";
 
 export default function Dashboard() {
@@ -55,27 +51,16 @@ export default function Dashboard() {
           (entry) =>
             !isCompanyTransaction(entry) && entry.projectId === project.id,
         );
-        const revenue = entries
-          .filter((entry) => entry.type === TRANSACTION_TYPE.REVENUE)
-          .reduce((sum, entry) => sum + Number(entry.amount), 0);
-        const expenseTotal = entries
-          .filter((entry) => entry.type === TRANSACTION_TYPE.EXPENSE)
-          .reduce((sum, entry) => sum + Number(entry.amount), 0);
-        const receivable = entries
-          .filter(
-            (entry) =>
-              entry.type === TRANSACTION_TYPE.REVENUE && entry.isReceived === false,
-          )
-          .reduce((sum, entry) => sum + Number(entry.amount), 0);
+        const totals = transactionTotals(entries);
         const display = (amount) =>
           showShare ? ownedAmount(amount, project) : amount;
         return {
           ...project,
           share: ownershipShare(project),
-          revenue: display(revenue),
-          receivable: display(receivable),
-          expenseTotal: display(expenseTotal),
-          netIncome: display(revenue - expenseTotal),
+          revenue: display(totals.revenue),
+          receivable: display(totals.receivable),
+          expenseTotal: display(totals.expenses),
+          netIncome: display(totals.netIncome),
         };
       }),
     [expenses, projects, showShare],
@@ -88,11 +73,15 @@ export default function Dashboard() {
   const receivable =
     rows.reduce((sum, project) => sum + project.receivable, 0) +
     company.receivable;
+  const netIncome =
+    rows.reduce((sum, project) => sum + project.netIncome, 0) +
+    company.netIncome;
   const chart = [
     ...rows.map((project) => ({
       name: project.name,
       revenue: project.revenue,
       expenses: project.expenseTotal,
+      receivable: project.receivable,
     })),
     ...(companyEntries.length
       ? [
@@ -100,6 +89,7 @@ export default function Dashboard() {
             name: "Company",
             revenue: company.revenue,
             expenses: company.expenses,
+            receivable: company.receivable,
           },
         ]
       : []),
@@ -142,7 +132,7 @@ export default function Dashboard() {
               [`${viewLabel} Revenue`]: rev,
               [`${viewLabel} Receivable`]: receivable,
               [`${viewLabel} Expenses`]: expenseTotal,
-              [`${viewLabel} Net Income`]: rev - expenseTotal,
+              [`${viewLabel} Net Income`]: netIncome,
               "Company Revenue": company.revenue,
               "Company Receivable": company.receivable,
               "Company Expenses": company.expenses,
@@ -178,7 +168,6 @@ export default function Dashboard() {
             )?.name || "",
             Description: expense.description || "",
             Type: expense.type || "",
-            "Payment Status": expense.type === TRANSACTION_TYPE.REVENUE ? (expense.isReceived === false ? "Receivable" : "Received") : "N/A",
             Amount: Number(expense.amount) || 0,
             Notes: expense.notes || "",
           })),
@@ -224,7 +213,7 @@ export default function Dashboard() {
           <StatCard title="Total projects" value={projects.length} icon={<FolderKanban />} />
         </Col>
         <Col xs={24} sm={12}>
-          <StatCard title={`${viewLabel} net income`} value={money(rev - expenseTotal)} icon={<Wallet />} color="purple" />
+          <StatCard title={`${viewLabel} net income`} value={money(netIncome)} icon={<Wallet />} color="purple" />
         </Col>
       </Row>
       <Row gutter={[20, 20]} className="section">
@@ -250,6 +239,7 @@ export default function Dashboard() {
                   <Legend />
                   <Bar dataKey="revenue" fill="#1677ff" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="expenses" name="Expenses" fill="#ff9c6e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="receivable" name="Receivable" fill="#faad14" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

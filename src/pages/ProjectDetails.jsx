@@ -17,7 +17,10 @@ import { downloadExcel, exportFileName } from "../utils/excel";
 import {
   TRANSACTION_SCOPE,
   TRANSACTION_TYPE,
+  asReceivedTransaction,
   isCompanyTransaction,
+  parseTransactionType,
+  transactionTotals,
 } from "../utils/finance";
 import { ownedAmount, ownershipShare } from "../utils/ownership";
 
@@ -77,18 +80,7 @@ export default function ProjectDetails() {
       ),
     [allTransactions, projectId, type, costCenterId],
   );
-  const revenue = rows
-    .filter((item) => item.type === TRANSACTION_TYPE.REVENUE)
-    .reduce((total, item) => total + Number(item.amount), 0);
-  const expenses = rows
-    .filter((item) => item.type === TRANSACTION_TYPE.EXPENSE)
-    .reduce((total, item) => total + Number(item.amount), 0);
-  const receivable = rows
-    .filter(
-      (item) =>
-        item.type === TRANSACTION_TYPE.REVENUE && item.isReceived === false,
-    )
-    .reduce((total, item) => total + Number(item.amount), 0);
+  const { revenue, expenses, receivable, netIncome } = transactionTotals(rows);
 
   if (!project)
     return (
@@ -113,12 +105,8 @@ export default function ProjectDetails() {
         ? {
             ...transaction,
             date: dayjs(transaction.date),
-            isReceived:
-              transaction.type === TRANSACTION_TYPE.REVENUE
-                ? transaction.isReceived !== false
-                : true,
           }
-        : { type: TRANSACTION_TYPE.REVENUE, isReceived: true, date: dayjs() },
+        : { type: TRANSACTION_TYPE.REVENUE, date: dayjs() },
     );
   };
   const adoptTransaction = (transaction) =>
@@ -148,7 +136,7 @@ export default function ProjectDetails() {
               Revenue: displayedAmount(revenue),
               Receivable: displayedAmount(receivable),
               Expenses: displayedAmount(expenses),
-              "Net Income": displayedAmount(revenue - expenses),
+              "Net Income": displayedAmount(netIncome),
             },
           ],
         },
@@ -158,12 +146,6 @@ export default function ProjectDetails() {
             Date: transaction.date || "",
             Description: transaction.description || "",
             Type: transaction.type || "",
-            "Payment Status":
-              transaction.type === TRANSACTION_TYPE.REVENUE
-                ? transaction.isReceived === false
-                  ? "Receivable"
-                  : "Received"
-                : "N/A",
             "Cost Center":
               centers.find((center) => center.id === transaction.costCenterId)
                 ?.name || "",
@@ -189,10 +171,7 @@ export default function ProjectDetails() {
         costCenterId: values.costCenterId,
         description: values.description,
         type: values.type,
-        isReceived:
-          values.type === TRANSACTION_TYPE.REVENUE
-            ? values.isReceived !== false
-            : true,
+        isReceived: values.type === TRANSACTION_TYPE.RECEIVED,
         amount: Number(values.amount),
         date: values.date.format("YYYY-MM-DD"),
         notes: values.notes || "",
@@ -219,8 +198,7 @@ export default function ProjectDetails() {
         saveRecordThunk({
           collection: "expenses",
           item: {
-            ...transaction,
-            isReceived: true,
+            ...asReceivedTransaction(transaction),
             updatedAt: new Date().toISOString(),
           },
           userId: user?.uid,
@@ -263,13 +241,13 @@ export default function ProjectDetails() {
         const description = String(
           columnValue(row, "description") ?? "",
         ).trim();
-        const typeText = String(columnValue(row, "type") ?? "")
+        const paymentStatus = String(columnValue(row, "paymentstatus") ?? "")
           .trim()
           .toLowerCase();
-        const transactionType =
-          typeText === "expense"
-            ? TRANSACTION_TYPE.EXPENSE
-            : TRANSACTION_TYPE.REVENUE;
+        const transactionType = parseTransactionType(
+          columnValue(row, "type"),
+          paymentStatus,
+        );
         const amount = Number(
           String(columnValue(row, "amount") ?? "").replace(/[,\s]/g, ""),
         );
@@ -280,9 +258,6 @@ export default function ProjectDetails() {
           costCenterName.toLowerCase(),
         );
         const date = importDate(columnValue(row, "date"));
-        const paymentStatus = String(columnValue(row, "paymentstatus") ?? "")
-          .trim()
-          .toLowerCase();
         if (!description)
           throw new Error(`Row ${rowNumber}: Description is required.`);
         if (!Number.isFinite(amount) || amount <= 0)
@@ -310,10 +285,7 @@ export default function ProjectDetails() {
           type: transactionType,
           amount,
           date,
-          isReceived:
-            transactionType === TRANSACTION_TYPE.REVENUE
-              ? paymentStatus !== "receivable"
-              : true,
+          isReceived: transactionType === TRANSACTION_TYPE.RECEIVED,
           notes: String(columnValue(row, "notes") ?? "").trim(),
           id: createId(),
           createdAt: now,
@@ -407,7 +379,7 @@ export default function ProjectDetails() {
         revenue={displayedAmount(revenue)}
         expenses={displayedAmount(expenses)}
         receivable={displayedAmount(receivable)}
-        netIncome={displayedAmount(revenue - expenses)}
+        netIncome={displayedAmount(netIncome)}
       />
       <TransactionsTable
         rows={rows}

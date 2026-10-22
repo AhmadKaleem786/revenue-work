@@ -3,11 +3,11 @@ import { Button, Modal, Table } from "antd";
 
 const importColumns = [
   { column: "Description", required: "Required", details: "Transaction description." },
-  { column: "Type", required: "Optional", details: "Use Expense for an expense. Blank or any other value is revenue." },
+  { column: "Type", required: "Optional", details: "Revenue, Expense, Receivable, or Received. Blank defaults to Revenue. Receivable is subtracted in totals; Received is ignored." },
   { column: "Amount", required: "Required", details: "A number greater than zero; commas are allowed." },
   { column: "Cost Center", required: "Required", details: "Must exactly match an existing cost-center name." },
   { column: "Date", required: "Optional", details: "Use YYYY-MM-DD, for example 2026-09-19. Blank dates use today." },
-  { column: "Payment Status", required: "Optional", details: "For revenue only: Received or Receivable. Blank defaults to Received." },
+  { column: "Payment Status", required: "Optional", details: "Receivable turns the row into a receivable. Received is only used when Type is Receivable." },
   { column: "Notes", required: "Optional", details: "Any additional note." },
 ];
 

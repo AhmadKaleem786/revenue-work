@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { App, Button, Form } from "antd";
-import { Download, Plus, TrendingDown } from "lucide-react";
+import { Clock3, Download, Plus, TrendingDown } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import dayjs from "dayjs";
 import { deleteRecordThunk, saveRecordThunk } from "../store";
@@ -13,6 +13,7 @@ import { downloadExcel, exportFileName } from "../utils/excel";
 import {
   TRANSACTION_SCOPE,
   TRANSACTION_TYPE,
+  asReceivedTransaction,
   isCompanyTransaction,
   transactionTotals,
 } from "../utils/finance";
@@ -57,14 +58,9 @@ export default function CompanyTransactions() {
         ? {
             ...transaction,
             date: dayjs(transaction.date),
-            isReceived:
-              transaction.type === TRANSACTION_TYPE.REVENUE
-                ? transaction.isReceived !== false
-                : true,
           }
         : {
             type: TRANSACTION_TYPE.REVENUE,
-            isReceived: true,
             date: dayjs(),
             ...defaults,
           },
@@ -99,12 +95,6 @@ export default function CompanyTransactions() {
             Date: transaction.date || "",
             Description: transaction.description || "",
             Type: transaction.type || "",
-            "Payment Status":
-              transaction.type === TRANSACTION_TYPE.REVENUE
-                ? transaction.isReceived === false
-                  ? "Receivable"
-                  : "Received"
-                : "N/A",
             "Cost Center":
               centers.find((center) => center.id === transaction.costCenterId)
                 ?.name || "",
@@ -130,10 +120,7 @@ export default function CompanyTransactions() {
         costCenterId: values.costCenterId,
         description: values.description,
         type: values.type,
-        isReceived:
-          values.type === TRANSACTION_TYPE.REVENUE
-            ? values.isReceived !== false
-            : true,
+        isReceived: values.type === TRANSACTION_TYPE.RECEIVED,
         amount: Number(values.amount),
         date: values.date.format("YYYY-MM-DD"),
         notes: values.notes || "",
@@ -160,8 +147,7 @@ export default function CompanyTransactions() {
         saveRecordThunk({
           collection: "expenses",
           item: {
-            ...transaction,
-            isReceived: true,
+            ...asReceivedTransaction(transaction),
             updatedAt: new Date().toISOString(),
           },
           userId: user?.uid,
@@ -182,6 +168,14 @@ export default function CompanyTransactions() {
           <>
             <Button icon={<Download size={16} />} onClick={exportCompany}>
               Export Excel
+            </Button>
+            <Button
+              icon={<Clock3 size={16} />}
+              onClick={() =>
+                openEditor(null, { type: TRANSACTION_TYPE.RECEIVABLE })
+              }
+            >
+              Add receivable
             </Button>
             <Button
               icon={<TrendingDown size={16} />}

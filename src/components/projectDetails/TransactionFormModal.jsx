@@ -1,8 +1,17 @@
 import React from "react";
-import { Checkbox, Col, DatePicker, Form, Input, InputNumber, Modal, Row, Select } from "antd";
-import { TRANSACTION_TYPE } from "../../utils/finance";
+import { Col, DatePicker, Form, Input, InputNumber, Modal, Row, Select } from "antd";
+import {
+  CREATABLE_TRANSACTION_TYPES,
+  TRANSACTION_TYPE,
+} from "../../utils/finance";
 
 export function TransactionFormModal({ editing, form, centers, saving, onCancel, onSave }) {
+  const typeOptions = (
+    editing?.type === TRANSACTION_TYPE.RECEIVED
+      ? Object.values(TRANSACTION_TYPE)
+      : CREATABLE_TRANSACTION_TYPES
+  ).map((value) => ({ value, label: value }));
+
   return (
     <Modal
       title={editing?.id ? "Edit transaction" : "Add transaction"}
@@ -37,7 +46,7 @@ export function TransactionFormModal({ editing, form, centers, saving, onCancel,
         <Row gutter={16}>
           <Col xs={24} sm={12}>
             <Form.Item label="Type" name="type" rules={[{ required: true, message: "Please select a transaction type" }]}>
-              <Select options={Object.values(TRANSACTION_TYPE).map((value) => ({ value, label: value }))} />
+              <Select options={typeOptions} />
             </Form.Item>
           </Col>
           <Col xs={24} sm={12}>
@@ -46,13 +55,6 @@ export function TransactionFormModal({ editing, form, centers, saving, onCancel,
             </Form.Item>
           </Col>
         </Row>
-        <Form.Item noStyle shouldUpdate={(previous, current) => previous.type !== current.type}>
-          {({ getFieldValue }) => getFieldValue("type") === TRANSACTION_TYPE.REVENUE && (
-            <Form.Item name="isReceived" valuePropName="checked">
-              <Checkbox>Payment has been received</Checkbox>
-            </Form.Item>
-          )}
-        </Form.Item>
         <Form.Item label="Notes" name="notes">
           <Input.TextArea rows={2} placeholder="Optional note" />
         </Form.Item>

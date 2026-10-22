@@ -2,7 +2,11 @@ import React from "react";
 import { Button, Card, Select, Space, Table, Tag, Tooltip } from "antd";
 import { CheckCircle2, CopyPlus, Pencil, Trash2 } from "lucide-react";
 import { EmptyState, money } from "../UI";
-import { TRANSACTION_TYPE } from "../../utils/finance";
+import {
+  TRANSACTION_TYPE,
+  isOutstandingReceivable,
+  typeTagColor,
+} from "../../utils/finance";
 
 export function TransactionsTable({
   rows,
@@ -27,7 +31,7 @@ export function TransactionsTable({
           <Select
             placeholder="All types"
             allowClear
-            style={{ width: 140 }}
+            style={{ width: 160 }}
             value={type || undefined}
             onChange={onTypeChange}
             options={Object.values(TRANSACTION_TYPE).map((value) => ({ value }))}
@@ -61,7 +65,7 @@ export function TransactionsTable({
           {
             title: "Type",
             dataIndex: "type",
-            render: (value) => <Tag color={value === TRANSACTION_TYPE.REVENUE ? "green" : "orange"}>{value}</Tag>,
+            render: (value) => <Tag color={typeTagColor(value)}>{value}</Tag>,
           },
           {
             title: "Cost center",
@@ -77,7 +81,7 @@ export function TransactionsTable({
           {
             title: "Mark received",
             render: (_, record) =>
-              record.type === TRANSACTION_TYPE.REVENUE && record.isReceived === false ? (
+              isOutstandingReceivable(record) ? (
                 <Tooltip title="Mark as received">
                   <Button type="text" aria-label="Mark as received" icon={<CheckCircle2 size={17} />} onClick={() => onMarkReceived(record)} />
                 </Tooltip>
