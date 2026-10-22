@@ -127,44 +127,47 @@ export default function App() {
           <Spin size="large" />
         </div>
       ) : (
-      <Suspense
-        fallback={
-          <div className="page-loader">
-            <Spin size="large" />
-          </div>
-        }
-      >
-        <Routes>
-          <Route path="/login" element={<Auth mode="login" />} />
-          <Route path="/signup" element={<Auth mode="signup" />} />
-          <Route
-            element={
-              <Guard>
-                <AppLayout />
-              </Guard>
-            }
-          >
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:id" element={<ProjectDetails />} />
-            <Route path="/cost-centers" element={<CostCenters />} />
-            <Route path="/company-transactions" element={<CompanyTransactions />} />
-            <Route path="/project-statuses" element={<ProjectStatuses />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Profile settings />} />
-          </Route>
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-          <Route
-            path="*"
-            element={
-              <div className="not-found">
-                <h1>404</h1>
-                <p>This page does not exist.</p>
-              </div>
-            }
-          />
-        </Routes>
-      </Suspense>
+        <Suspense
+          fallback={
+            <div className="page-loader">
+              <Spin size="large" />
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/login" element={<Auth mode="login" />} />
+            {/*  <Route path="/signup" element={<Auth mode="signup" />} /> */}
+            <Route
+              element={
+                <Guard>
+                  <AppLayout />
+                </Guard>
+              }
+            >
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
+              <Route path="/cost-centers" element={<CostCenters />} />
+              <Route
+                path="/company-transactions"
+                element={<CompanyTransactions />}
+              />
+              <Route path="/project-statuses" element={<ProjectStatuses />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Profile settings />} />
+            </Route>
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route
+              path="*"
+              element={
+                <div className="not-found">
+                  <h1>404</h1>
+                  <p>This page does not exist.</p>
+                </div>
+              }
+            />
+          </Routes>
+        </Suspense>
       )}
     </ConfigProvider>
   );
