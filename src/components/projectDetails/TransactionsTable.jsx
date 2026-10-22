@@ -61,23 +61,42 @@ export function TransactionsTable({
           ),
         }}
         columns={[
-          { title: "Description", dataIndex: "description" },
+          {
+            title: "Description",
+            dataIndex: "description",
+            sorter: (a, b) => (a.description || "").localeCompare(b.description || ""),
+          },
           {
             title: "Type",
             dataIndex: "type",
+            sorter: (a, b) => (a.type || "").localeCompare(b.type || ""),
             render: (value) => <Tag color={typeTagColor(value)}>{value}</Tag>,
           },
           {
             title: "Cost center",
             dataIndex: "costCenterId",
+            sorter: (a, b) =>
+              (centers.find((center) => center.id === a.costCenterId)?.name || "").localeCompare(
+                centers.find((center) => center.id === b.costCenterId)?.name || "",
+              ),
             render: (value) => (
               <Tag className="cost-center-pill">
                 {centers.find((center) => center.id === value)?.name || "—"}
               </Tag>
             ),
           },
-          { title: "Amount", dataIndex: "amount", render: money },
-          { title: "Date", dataIndex: "date", responsive: ["md"] },
+          {
+            title: "Amount",
+            dataIndex: "amount",
+            sorter: (a, b) => Number(a.amount || 0) - Number(b.amount || 0),
+            render: money,
+          },
+          {
+            title: "Date",
+            dataIndex: "date",
+            sorter: (a, b) => (a.date || "").localeCompare(b.date || ""),
+            responsive: ["md"],
+          },
           {
             title: "Mark received",
             render: (_, record) =>

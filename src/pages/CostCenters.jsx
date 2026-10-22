@@ -133,6 +133,7 @@ export default function CostCenters() {
           {
             title: "Description",
             dataIndex: "description",
+            sorter: (a, b) => (a.description || "").localeCompare(b.description || ""),
             responsive: ["sm"],
           },
           {

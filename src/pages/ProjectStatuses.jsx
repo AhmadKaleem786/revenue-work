@@ -57,9 +57,9 @@ export default function ProjectStatuses() {
       action={<><Button icon={<Download size={16} />} onClick={() => downloadExcel({ fileName: exportFileName(user?.name, "project-statuses"), sheets: [{ name: "Project Statuses", rows: filtered.map((item) => ({ Status: item.name, Description: item.description || "", Projects: projects.filter((project) => project.projectStatusId === item.id).length })) }] })}>Export Excel</Button><Button type="primary" icon={<Plus size={16} />} onClick={() => open()}>New project status</Button></>} />
     <Input className="table-search" prefix={<Search size={16} />} placeholder="Search project statuses" onChange={(event) => setQuery(event.target.value)} />
     <Table className="data-table" rowKey="id" dataSource={filtered} pagination={{ pageSize: 8 }} locale={{ emptyText: <EmptyState title="No project statuses yet" description="Create statuses such as Planned, Active, or Complete." action={{ label: "New project status", onClick: () => open() }} /> }} columns={[
-      { title: "Name", dataIndex: "name", sorter: (a, b) => a.name.localeCompare(b.name) },
-      { title: "Description", dataIndex: "description", responsive: ["sm"] },
-      { title: "Projects", render: (_, item) => projects.filter((project) => project.projectStatusId === item.id).length },
+      { title: "Name", dataIndex: "name", sorter: (a, b) => (a.name || "").localeCompare(b.name || "") },
+      { title: "Description", dataIndex: "description", sorter: (a, b) => (a.description || "").localeCompare(b.description || ""), responsive: ["sm"] },
+      { title: "Projects", sorter: (a, b) => projects.filter((project) => project.projectStatusId === a.id).length - projects.filter((project) => project.projectStatusId === b.id).length, render: (_, item) => projects.filter((project) => project.projectStatusId === item.id).length },
       { title: "Actions", width: 110, render: (_, item) => <><Button type="text" aria-label="Edit" icon={<Pencil size={16} />} onClick={() => open(item)} /><Button type="text" danger aria-label="Delete" icon={<Trash2 size={16} />} onClick={() => setDel(item)} /></> },
     ]} />
     <Modal title={editing?.id ? "Edit project status" : "New project status"} open={editing !== null} onCancel={() => { setEditing(null); form.resetFields(); }} onOk={save} confirmLoading={saving} cancelButtonProps={{ disabled: saving }} closable={!saving} forceRender maskClosable={false} okText={editing?.id ? "Save changes" : "Create"} width={520}>

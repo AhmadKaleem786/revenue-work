@@ -278,6 +278,7 @@ export default function Dashboard() {
                 {
                   title: "Project",
                   dataIndex: "name",
+                  sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
                   render: (value, record) =>
                     record.isCompany ? (
                       <Link to="/company-transactions">{value}</Link>
@@ -288,12 +289,14 @@ export default function Dashboard() {
                 {
                   title: `${viewLabel} receivable`,
                   dataIndex: "receivable",
+                  sorter: (a, b) => a.receivable - b.receivable,
                   render: money,
                   responsive: ["md"],
                 },
                 {
                   title: `${viewLabel} net income`,
                   dataIndex: "netIncome",
+                  sorter: (a, b) => a.netIncome - b.netIncome,
                   render: (value) => <Tag color={value >= 0 ? "green" : "red"}>{money(value)}</Tag>,
                 },
               ]}

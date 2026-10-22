@@ -188,35 +188,48 @@ export default function Projects() {
           {
             title: "Revenue",
             dataIndex: "r",
+            sorter: (a, b) => a.r - b.r,
             render: money,
             responsive: ["md"],
           },
           {
             title: "Status",
             dataIndex: "projectStatusId",
+            sorter: (a, b) =>
+              (statuses.find((item) => item.id === a.projectStatusId)?.name || "").localeCompare(
+                statuses.find((item) => item.id === b.projectStatusId)?.name || "",
+              ),
             render: (value) =>
               statuses.find((item) => item.id === value)?.name || "—",
           },
           {
             title: "Receivable",
             dataIndex: "receivable",
+            sorter: (a, b) => a.receivable - b.receivable,
             render: money,
             responsive: ["xl"],
           },
           {
             title: "Expenses",
             dataIndex: "expenseTotal",
+            sorter: (a, b) => a.expenseTotal - b.expenseTotal,
             render: money,
             responsive: ["lg"],
           },
           {
             title: "Net Income",
             dataIndex: "netIncome",
+            sorter: (a, b) => a.netIncome - b.netIncome,
             render: (v) => (
               <Tag color={v >= 0 ? "green" : "red"}>{money(v)}</Tag>
             ),
           },
-          { title: "Created", dataIndex: "createdDate", responsive: ["lg"] },
+          {
+            title: "Created",
+            dataIndex: "createdDate",
+            sorter: (a, b) => (a.createdDate || "").localeCompare(b.createdDate || ""),
+            responsive: ["lg"],
+          },
           {
             title: "Actions",
             width: 110,
